@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧔 Chefo TV 📺</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 10px;
+            padding: 0;
+            background-color: #121212;
+            color: #FFFFFF;
+            --color-primario: #BB86FC;
+        }
+        .container {
+            max-width: 1200px;
+            margin:0 auto;
+            background: #121212;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        h1 {
+            text-align: center;
+            color: #FFFFFF;
+            margin-bottom: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .categoria {
+            margin-bottom: 20px;
+        }
+        .categoria h2 {
+            font-size: 18px;
+            color: var(--color-primario);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .link-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            transition: opacity 0.3s ease, max-height 0.3s ease;
+            overflow: hidden;
+        }
+        .categoria.oculta .link-list {
+            opacity: 0;
+            max-height: 0;
+        }
+        .toggle-categoria {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--color-primario);
+            margin-left: 10px;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .toggle-categoria:hover {
+            background-color: rgba(187, 134, 252, 0.1);
+        }
+        .link-item {
+            flex: 1 1 calc(33.33% - 10px);
+            height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #FFFFFF;
+            border: 2px solid var(--color-primario);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            padding: 10px;
+            font-size: 14px;
+            position: relative;
+            box-sizing: border-box;
+            background-color: #1E1E1E;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+        }
+        .link-item:hover {
+            opacity: 0.9;
+        }
+        .menu-contextual {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            border-radius: 8px;
+            padding: 5px;
+            font-size: 12px;
+            z-index: 10;
+        }
+        .menu-contextual button {
+            margin: 5px;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .menu-contextual button:nth-child(1) {
+            background-color: #CF6679;
+            color: white;
+        }
+        .menu-contextual button:nth-child(2) {
+            background-color: #370083;
+            color: white;
+        }
+        .menu-contextual button:nth-child(3) {
+            background-color: #28a745;
+            color: white;
+        }
+        .link-item.mostrar-menu .menu-contextual {
+            display: block;
+        }
+        .boton-agregar {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--color-primario);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 24px;
+            margin: 0 auto;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .boton-agregar:hover {
+            background-color: #200;
+        }
+        .form-container {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid var(--color-primario);
+            display: none;
+        }
+        .form-container.mostrar {
+            display: block;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0;
+            border: 1px solid var(--color-primario);
+            border-radius: 4px;
+            background-color: #121212;
+            color: #FFFFFF;
+            font-size: 14px;
+        }
+        .selectores {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 8px 0;
+        }
+        .color-picker {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .color-picker input[type="color"] {
+            width: 30px;
+            height: 30px;
+            padding: 3px;
+            border: 2px solid var(--color-primario);
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .color-picker input[type="text"] {
+            width: 70px;
+            padding: 6px;
+            border: 1px solid var(--color-primario);
+            border-radius: 4px;
+            background-color: #121212;
+            color: #FFFFFF;
+            font-size: 12px;
+        }
+        .deporte-selector select {
+            width: auto;
+            padding: 8px;
+            border: 2px solid var(--color-primario);
+            border-radius: 6px;
+            cursor: pointer;
+            background-color: #121212;
+            color: #FFFFFF;
+            font-size: 14px;
+        }
+        .idioma-selector select {
+            width: auto;
+            padding: 8px;
+            border: 2px solid var(--color-primario);
+            border-radius: 6px;
+            cursor: pointer;
+            background-color: #121212;
+            color: #FFFFFF;
+            font-size: 14px;
+        }
+        .toggle-icono {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .checkbox-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        .icono {
+            font-size: 24px;
+            text-align: center;
+        }
+        .toggle-icono label {
+            font-size: 14px;
+            color: #FFFFFF;
+            cursor: pointer;
+        }
+        .toggle-icono input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: var(--color-primario);
+        }
+        button {
+            width: 100%;
+            padding: 8px;
+            background-color: var(--color-primario);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #200;
+        }
+        .boton-exportar {
+            background-color: var(--color-primario);
+            margin-top: 8px;
+        }
+        .boton-exportar:hover {
+            background-color: #370083;
+        }
+        .boton-importar {
+            background-color: #CF6679;
+            margin-top: 8px;
+        }
+        .boton-importar:hover {
+            background-color: #9e4a5a;
+        }
+        .boton-borrar-todo {
+            background-color: #ff4444;
+            margin-top: 8px;
+        }
+        .boton-borrar-todo:hover {
+            background-color: #cc0000;
+        }
+        .separador {
+            margin: 20px 0;
+            border: 1px solid var(--color-primario);
+        }
+        .notificacion {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--color-primario);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: none;
+            z-index: 1000;
+        }
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; }
+            10%, 90% { opacity: 1; }
+        }
+        .barra-busqueda {
+            margin-bottom: 20px;
+        }
+        .barra-busqueda input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--color-primario);
+            border-radius: 4px;
+            background-color: #121212;
+            color: #FFFFFF;
+            margin-left: 0;
+        }
+        .form-container input[type="text"] {
+            width: calc(100% - 16px);
+            margin-left: 0;
+        }
+        .filtros {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        .filtros select {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--color-primario);
+            border-radius: 4px;
+            background-color: #121212;
+            color: #FFFFFF;
+            height: 40px;
+        }
+        .puntuacion {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+        .puntuacion button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: #CCCCCC;
+            padding: 0;
+            transition: color 0.3s ease;
+        }
+        .puntuacion button.seleccionado {
+            color: var(--color-primario);
+        }
+        .boton-ajustes {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--color-primario);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .boton-ajustes:hover {
+            opacity: 0.8;
+        }
+        .menu-ajustes {
+            display: none;
+            position: absolute;
+            top: 60px;
+            left: 20px;
+            background-color: #333333;
+            border-radius: 8px;
+            padding: 10px;
+            z-index: 1000;
+            width: 200px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        .menu-ajustes.mostrar {
+            display: block;
+        }
+        .menu-ajustes button {
+            display: block;
+            width: 100%;
+            margin: 5px 0;
+        }
+        .selector-apertura-enlaces {
+            margin-bottom: 10px;
+        }
+        .selector-apertura-enlaces select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--color-primario);
+            border-radius: 4px;
+            background-color: #121212;
+            color: #FFFFFF;
+            font-size: 14px;
+        }
+        .modal-importar {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #121212;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: none;
+        }
+        .modal-importar textarea {
+            width: 100%;
+            margin-bottom: 10px;
+            background-color: #121212;
+            color: #FFFFFF;
+            border: 1px solid var(--color-primario);
+            border-radius: 4px;
+            padding: 8px;
+        }
+        .modal-importar button {
+            padding: 8px 16px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .modal-importar button:hover {
+            opacity: 0.8;
+        }
+        .reproductor {
+            width: 92%;
+            height: 250px;
+            margin-bottom: 40px;
+            background-color: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            display: none;
+            resize: vertical;
+            min-height: 250px;
+            max-height: 80vh;
+            position: sticky;
+            top: 60px;
+            z-index: 100;
+            border: 15px solid rgba(30, 30, 30, 0.2);
+            margin-left: 0;
+        }
+        .reproductor::after {
+            content: "◿";
+             position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 20px;
+            height: 20px;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: ns-resize;
+            z-index: 10;
+        }
+        .reproductor iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .controles-reproductor {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            position: sticky;
+            top: 20px;
+            z-index: 101;
+            margin-bottom: 10px;
+        }
+        .boton-cerrar-reproductor {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            background-color: #CF6679;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .boton-cerrar-reproductor:hover {
+            background-color: #9e4a5a;
+        }
+        .boton-refrescar-reproductor {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .boton-refrescar-reproductor:hover {
+            background-color: #3e8e41;
+        }
+        .boton-favorito {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            color: #FFD700;
+            z-index: 1;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .boton-favoritos {
+            background-color: #FFD700;
+            color: #000;
+            margin-top: 8px;
+        }
+        .boton-favoritos:hover {
+            background-color: #FFC000;
+        }
+        .boton-limpiar-filtros {
+            background-color: var(--color-primario);
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+        }
+        .boton-limpiar-filtros:hover {
+            background-color: #370083;
+        }
+        .etiquetas {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 5px;
+            justify-content: center;
+        }
+        .etiqueta {
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            white-space: nowrap;
+        }
+        .selector-etiquetas {
+            margin-top: 10px;
+        }
+        .selector-etiquetas label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        .etiquetas-opciones {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .etiqueta-opcion {
+            display: flex;
+            align-items: center;
+            background-color: rgba(187, 134, 252, 0.2);
+            padding: 4px 8px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .etiqueta-opcion input {
+            margin-right: 4px;
+        }
+        .etiqueta-opcion.seleccionada {
+            background-color: var(--color-primario);
+        }
+        .boton-pantalla-completa {
+            background-color: #4CAF50;
+            margin-top: 8px;
+        }
+        .boton-pantalla-completa:hover {
+            background-color: #3e8e41;
+        }
+        /* Estilo modificado para el botón de subir con opacidad al 100% */
+        .boton-subir {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background-color: var(--color-primario);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            opacity: 1;
+            transition: opacity 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        
+        .boton-subir:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controles-reproductor">
+            <button class="boton-refrescar-reproductor" id="botonRefrescarReproductor" onclick="refrescarReproductor()" style="display: none;">↻</button>
+            <button class="boton-cerrar-reproductor" id="botonCerrarReproductor" onclick="cerrarReproductor()" style="display: none;">×</button>
+        </div>
+        <div class="reproductor" id="reproductor">
+            <iframe id="videoFrame" src="" allowfullscreen></iframe>
+        </div>
+
+        <button class="boton-ajustes" onclick="mostrarMenuAjustes()">⚙️</button>
+        <div class="menu-ajustes" id="menuAjustes">
+            <div class="selector-apertura-enlaces">
+                <select id="selectorApertura" onchange="cambiarAperturaEnlaces()">
+                    <option value="nueva-pestaña">Abrir en otra pestaña</option>
+                    <option value="solo-web-reproductor">Abrir solo "Vía WEB" en reproductor</option>
+                    <option value="todo-reproductor">Abrir todo en reproductor</option>
+                </select>
+            </div>
+            <button class="boton-pantalla-completa" onclick="togglePantallaCompleta()">Pantalla Completa</button>
+            <button class="boton-exportar" onclick="exportarEnlaces()">Exportar Enlaces</button>
+            <button class="boton-importar" onclick="document.getElementById('fileInput').click()">Importar Enlaces</button>
+            <button class="boton-importar" onclick="importarDesdeTexto()">Importar Pegando Texto</button>
+            <button class="boton-borrar-todo" onclick="borrarTodosLosEnlaces()">Borrar Todos los Enlaces</button>
+            <button class="boton-favoritos" onclick="filtrarFavoritos()">Mostrar solo favoritos</button>
+        </div>
+
+        <div class="modal-importar" id="modalImportar">
+            <h3>Pega tu copia de seguridad JSON</h3>
+            <textarea id="textoImportar" rows="10" cols="50" placeholder="Pega aquí el contenido JSON..."></textarea>
+            <button onclick="procesarTextoImportado()">Importar</button>
+            <button onclick="cerrarModalImportar()">Cancelar</button>
+        </div>
+
+        <h1>🧔 Chefo TV 📺</h1>
+
+        <div class="barra-busqueda">
+            <input type="text" id="busqueda" placeholder="Buscar enlaces..." oninput="filtrarEnlaces()">
+        </div>
+        <div class="filtros">
+            <select id="filtroDeporte" onchange="filtrarEnlaces()">
+                <option value="">Todos los deportes</option>
+                <option value="f1">Fórmula 1 🏎️</option>
+                <option value="futbol">Fútbol ⚽</option>
+                <option value="nba">NBA 🏀</option>
+                <option value="tenis">Tenis 🎾</option>
+                <option value="nascar">NASCAR 🚗</option>
+                <option value="indy">Indy 🚙</option>
+                <option value="motogp">Moto GP 🏍️</option>
+                <option value="wec">WEC 🏁</option>
+                <option value="rugby">Rugby 🏉</option>
+                <option value="ciclismo">Ciclismo 🚴</option>
+                <option value="boxeo">Boxeo 🥊</option>
+                <option value="mma">MMA 🥋</option>
+                <option value="esports">eSports 🎮</option>
+                <option value="otros">Otros 🏅</option>
+            </select>
+            <select id="filtroIdioma" onchange="filtrarEnlaces()">
+                <option value="">Todos los idiomas</option>
+                <option value="ES">🇪🇦 ESPAÑOL</option>
+                <option value="EN">🇬🇧 ENGLISH</option>
+                <option value="FR">🇫🇷 FRENCH</option>
+                <option value="DE">🇩🇪 DUTCH</option>
+                <option value="OT">🏳️‍⚧️ OTROS</option>
+            </select>
+            <button class="boton-limpiar-filtros" onclick="limpiarFiltros()" title="Limpiar filtros">⥀</button>
+        </div>
+
+        <div class="categoria">
+            <h2>
+                Vía WEB
+                <button class="toggle-categoria" onclick="toggleCategoria(this)">▼</button>
+            </h2>
+            <div class="link-list" id="linkList"></div>
+        </div>
+
+        <hr class="separador">
+
+        <div class="categoria">
+            <h2>
+                Vía Acestream
+                <button class="toggle-categoria" onclick="toggleCategoria(this)">▼</button>
+            </h2>
+            <div class="link-list" id="acestreamList"></div>
+        </div>
+
+        <hr class="separador">
+
+        <div class="categoria">
+            <h2>
+                FUENTES
+                <button class="toggle-categoria" onclick="toggleCategoria(this)">▼</button>
+            </h2>
+            <div class="link-list" id="multiList"></div>
+        </div>
+
+        <div class="link-list">
+            <div class="boton-agregar" id="botonAgregar" onclick="mostrarFormulario()">+</div>
+        </div>
+
+        <div class="form-container" id="formContainer">
+            <input type="text" id="link" placeholder="Pega tu enlace aquí">
+            <input type="text" id="title" placeholder="Añade un título">
+            <input type="text" id="webName" placeholder="Nombre de la web (opcional)">
+            <div class="puntuacion" id="puntuacion">
+                <button onclick="seleccionarPuntuacion(1)">☆</button>
+                <button onclick="seleccionarPuntuacion(2)">☆</button>
+                <button onclick="seleccionarPuntuacion(3)">☆</button>
+                <button onclick="seleccionarPuntuacion(4)">☆</button>
+                <button onclick="seleccionarPuntuacion(5)">☆</button>
+            </div>
+            <div class="selectores">
+                <div class="color-picker">
+                    <input type="color" id="color" value="#28a745" oninput="actualizarCodigoColor()">
+                    <input type="text" id="codigoColor" value="#28a745">
+                </div>
+
+                <div class="deporte-selector">
+                    <select id="deporte">
+                        <option value="f1"> 🏎️ </option>
+                        <option value="futbol"> ⚽ </option>
+                        <option value="nba"> 🏀 </option>
+                        <option value="tenis"> 🎾 </option>
+                        <option value="nascar"> 🚗 </option>
+                        <option value="indy"> 🚙 </option>
+                        <option value="motogp"> 🏍️ </option>
+                        <option value="wec"> 🏁 </option>
+                        <option value="rugby"> 🏉 </option>
+                        <option value="ciclismo"> 🚴 </option>
+                        <option value="boxeo"> 🥊 </option>
+                        <option value="mma"> 🥋 </option>
+                        <option value="esports">  🎮 </option>
+                        <option value="otros"> 🏅 </option>
+                    </select>
+                </div>
+
+                <div class="idioma-selector">
+                    <select id="idioma">
+                        <option value="ES">🇪🇦 </option>
+                        <option value="EN">🇬🇧 </option>
+                        <option value="FR">🇫🇷 </option>
+                        <option value="DE">🇩🇪 </option>
+                        <option value="OT">🏳️‍⚧️ </option>
+                    </select>
+                </div>
+
+                <div class="toggle-icono">
+                    <select id="tipoEnlace">
+                        <option value="web">Vía WEB</option>
+                        <option value="acestream">Vía Acestream</option>
+                        <option value="fuentes">FUENTES</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="selector-etiquetas">
+                <label>Etiquetas:</label>
+                <div class="etiquetas-opciones" id="etiquetasOpciones">
+                    <label class="etiqueta-opcion">
+                        <input type="checkbox" value="#Acestream"> #Acestream
+                    </label>
+                    <label class="etiqueta-opcion">
+                        <input type="checkbox" value="#Vpn"> #Vpn
+                    </label>
+                    <label class="etiqueta-opcion">
+                        <input type="checkbox" value="#Recopilador"> #Recopilador
+                    </label>
+                    <label class="etiqueta-opcion">
+                        <input type="checkbox" value="#Multideporte"> #Multideporte
+                    </label>
+                    <label class="etiqueta-opcion">
+                        <input type="checkbox" value="#Eventos"> #Eventos
+                    </label>
+                </div>
+            </div>
+
+            <button onclick="guardarEnlace()">Guardar Enlace</button>
+            <input type="file" id="fileInput" accept=".json" style="display: none;" onchange="importarEnlaces(event)">
+        </div>
+    </div>
+
+    <div class="notificacion" id="notificacion"></div>
+
+    <!-- Botón para subir al inicio con opacidad al 100% -->
+    <button class="boton-subir" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">↑</button>
+
+    <script>
+        let enlacesGuardados = JSON.parse(localStorage.getItem('enlaces')) || [];
+        let indiceEdicion = null;
+        let indiceCambiar = null;
+        let puntuacionSeleccionada = 0;
+        let modoApertura = localStorage.getItem('modoApertura') || 'nueva-pestaña';
+        let alturaReproductor = localStorage.getItem('alturaReproductor') || '250px';
+        let mostrarSoloFavoritos = localStorage.getItem('mostrarSoloFavoritos') === 'true';
+        let currentVideoUrl = '';
+        
+        const iconosDeporte = {
+            f1: '🏎️', futbol: '⚽', nba: '🏀', tenis: '🎾', nascar: '🚗',
+            indy: '🚙', motogp: '🏍️', wec: '🏁', rugby: '🏉', ciclismo: '🚴',
+            boxeo: '🥊', mma: '🥋', esports: '🎮', otros: '🏅'
+        };
+        
+        const banderasIdioma = {
+            ES: '🇪🇦', EN: '🇬🇧', FR: '🇫🇷', DE: '🇩🇪', OT: '🏳️‍⚧️'
+        };
+
+        // Función para alternar favoritos
+        function toggleFavorito(index, event) {
+            event.stopPropagation(); // Previene que el clic se propague al contenedor
+            enlacesGuardados[index].favorito = !enlacesGuardados[index].favorito;
+            localStorage.setItem('enlaces', JSON.stringify(enlacesGuardados));
+            filtrarEnlaces();
+            mostrarNotificacion(enlacesGuardados[index].favorito ? 'Añadido a favoritos' : 'Eliminado de favoritos');
+        }
+
+        function filtrarEnlaces() {
+            const busqueda = document.getElementById('busqueda').value.toLowerCase();
+            const filtroDeporte = document.getElementById('filtroDeporte').value;
+            const filtroIdioma = document.getElementById('filtroIdioma').value;
+
+            const linkList = document.getElementById('linkList');
+            const acestreamList = document.getElementById('acestreamList');
+            const multiList = document.getElementById('multiList');
+            
+            linkList.innerHTML = '';
+            acestreamList.innerHTML = '';
+            multiList.innerHTML = '';
+
+            enlacesGuardados.forEach((item, index) => {
+                if (mostrarSoloFavoritos && !item.favorito) return;
+                
+                const titulo = item.title.toLowerCase();
+                const webName = item.webName ? item.webName.toLowerCase() : '';
+                const cumpleBusqueda = titulo.includes(busqueda) || webName.includes(busqueda);
+                const cumpleDeporte = !filtroDeporte || item.deporte === filtroDeporte;
+                const cumpleIdioma = !filtroIdioma || item.idioma === filtroIdioma;
+                
+                if (!cumpleBusqueda || !cumpleDeporte || !cumpleIdioma) return;
+
+                const linkItem = document.createElement('div');
+                linkItem.className = 'link-item';
+                linkItem.style.borderColor = item.color;
+                linkItem.onclick = () => {
+                    if (indiceCambiar !== null) {
+                        cambiarPosicion(index);
+                    } else {
+                        const categoria = item.mostrarIcono ? 'acestream' : item.mostrarMulti ? 'fuentes' : 'web';
+                        manejarClicEnlace(item.link, categoria);
+                    }
+                };
+
+                linkItem.innerHTML = `
+                    <button class="boton-favorito" onclick="toggleFavorito(${index}, event)">${item.favorito ? '★' : '☆'}</button>
+                    <div style="font-size:24px">${iconosDeporte[item.deporte]}</div>
+                    <div>${item.title}</div>
+                    ${item.webName ? `<div>${item.webName}</div>` : ''}
+                    <div>${banderasIdioma[item.idioma]}</div>
+                    <div>${'✭'.repeat(item.puntuacion) + '☆'.repeat(5 - item.puntuacion)}</div>
+                    ${(item.etiquetas || []).map(etiqueta => `<span class="etiqueta">${etiqueta}</span>`).join('')}
+                    <div class="menu-contextual">
+                        <button onclick="event.stopPropagation(); editarEnlace(${index})">✏️ Editar</button>
+                        <button onclick="event.stopPropagation(); borrarEnlace(${index})">🗑️ Borrar</button>
+                        <button onclick="event.stopPropagation(); cambiarPosicion(${index})">🔄 Cambiar</button>
+                    </div>
+                `;
+
+                if (item.mostrarIcono) {
+                    acestreamList.appendChild(linkItem);
+                } else if (item.mostrarMulti) {
+                    multiList.appendChild(linkItem);
+                } else {
+                    linkList.appendChild(linkItem);
+                }
+
+                linkItem.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    linkItem.classList.add('mostrar-menu');
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (!linkItem.contains(e.target)) {
+                        linkItem.classList.remove('mostrar-menu');
+                    }
+                });
+            });
+        }
+
+        function refrescarReproductor() {
+            if (currentVideoUrl) {
+                const videoFrame = document.getElementById('videoFrame');
+                videoFrame.src = currentVideoUrl;
+                mostrarNotificacion('Reproductor refrescado');
+            }
+        }
+
+        function filtrarFavoritos() {
+            mostrarSoloFavoritos = !mostrarSoloFavoritos;
+            localStorage.setItem('mostrarSoloFavoritos', mostrarSoloFavoritos);
+            document.querySelector('.boton-favoritos').textContent = mostrarSoloFavoritos ? 'Mostrar todos' : 'Mostrar solo favoritos';
+            filtrarEnlaces();
+        }
+
+        function limpiarFiltros() {
+            document.getElementById('busqueda').value = '';
+            document.getElementById('filtroDeporte').value = '';
+            document.getElementById('filtroIdioma').value = '';
+            mostrarSoloFavoritos = false;
+            localStorage.setItem('mostrarSoloFavoritos', false);
+            document.querySelector('.boton-favoritos').textContent = 'Mostrar solo favoritos';
+            filtrarEnlaces();
+        }
+
+        function togglePantallaCompleta() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    mostrarNotificacion(`Error al activar pantalla completa: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        function reproducirEnlace(url) {
+            currentVideoUrl = url;
+            const videoFrame = document.getElementById('videoFrame');
+            const reproductor = document.getElementById('reproductor');
+            const botonCerrar = document.getElementById('botonCerrarReproductor');
+            const botonRefrescar = document.getElementById('botonRefrescarReproductor');
+
+            videoFrame.src = url;
+            reproductor.style.display = 'block';
+            reproductor.style.height = alturaReproductor;
+            botonCerrar.style.display = 'flex';
+            botonRefrescar.style.display = 'flex';
+            
+            reproductor.addEventListener('pointerup', function() {
+                alturaReproductor = reproductor.style.height;
+                localStorage.setItem('alturaReproductor', alturaReproductor);
+            });
+        }
+
+        function cerrarReproductor() {
+            const videoFrame = document.getElementById('videoFrame');
+            const reproductor = document.getElementById('reproductor');
+            const botonCerrar = document.getElementById('botonCerrarReproductor');
+            const botonRefrescar = document.getElementById('botonRefrescarReproductor');
+
+            videoFrame.src = '';
+            reproductor.style.display = 'none';
+            botonCerrar.style.display = 'none';
+            botonRefrescar.style.display = 'none';
+            currentVideoUrl = '';
+        }
+
+        function cambiarAperturaEnlaces() {
+            const selector = document.getElementById('selectorApertura');
+            modoApertura = selector.value;
+            localStorage.setItem('modoApertura', modoApertura);
+        }
+
+        function manejarClicEnlace(url, categoria) {
+            if (modoApertura === 'nueva-pestaña') {
+                window.open(url, '_blank');
+            } else if (modoApertura === 'solo-web-reproductor' && categoria === 'web') {
+                reproducirEnlace(url);
+            } else if (modoApertura === 'todo-reproductor') {
+                reproducirEnlace(url);
+            } else {
+                window.open(url, '_blank');
+            }
+        }
+
+        function guardarEstadoCategorias() {
+            const categorias = document.querySelectorAll('.categoria');
+            const estadoCategorias = {};
+
+            categorias.forEach((categoria, index) => {
+                estadoCategorias[`categoria-${index}`] = categoria.classList.contains('oculta');
+            });
+
+            localStorage.setItem('estadoCategorias', JSON.stringify(estadoCategorias));
+        }
+
+        function cargarEstadoCategorias() {
+            const estadoCategorias = JSON.parse(localStorage.getItem('estadoCategorias')) || {};
+            const categorias = document.querySelectorAll('.categoria');
+
+            categorias.forEach((categoria, index) => {
+                const estado = estadoCategorias[`categoria-${index}`];
+                if (estado !== undefined) {
+                    if (estado) {
+                        categoria.classList.add('oculta');
+                        categoria.querySelector('.toggle-categoria').textContent = '▲';
+                    } else {
+                        categoria.classList.remove('oculta');
+                        categoria.querySelector('.toggle-categoria').textContent = '▼';
+                    }
+                }
+            });
+        }
+
+        function toggleCategoria(boton) {
+            const categoria = boton.closest('.categoria');
+            categoria.classList.toggle('oculta');
+
+            if (categoria.classList.contains('oculta')) {
+                boton.textContent = '▲';
+            } else {
+                boton.textContent = '▼';
+            }
+
+            guardarEstadoCategorias();
+        }
+
+        function mostrarFormulario() {
+            const formContainer = document.getElementById('formContainer');
+            const botonAgregar = document.getElementById('botonAgregar');
+            formContainer.classList.toggle('mostrar');
+            botonAgregar.textContent = formContainer.classList.contains('mostrar') ? '×' : '+';
+        }
+
+        function mostrarNotificacion(mensaje) {
+            const notificacion = document.getElementById('notificacion');
+            notificacion.textContent = mensaje;
+            notificacion.style.display = 'block';
+            setTimeout(() => notificacion.style.display = 'none', 3000);
+        }
+
+        function actualizarCodigoColor() {
+            const colorPicker = document.getElementById('color');
+            const codigoColor = document.getElementById('codigoColor');
+            codigoColor.value = colorPicker.value;
+        }
+
+        function seleccionarPuntuacion(puntos) {
+            puntuacionSeleccionada = puntos;
+            const botones = document.querySelectorAll('#puntuacion button');
+            botones.forEach((boton, index) => {
+                if (index < puntos) {
+                    boton.textContent = '✭';
+                    boton.classList.add('seleccionado');
+                } else {
+                    boton.textContent = '☆';
+                    boton.classList.remove('seleccionado');
+                }
+            });
+        }
+
+        function obtenerEtiquetasSeleccionadas() {
+            const checkboxes = document.querySelectorAll('.etiquetas-opciones input[type="checkbox"]:checked');
+            return Array.from(checkboxes).map(checkbox => checkbox.value);
+        }
+
+        function establecerEtiquetasSeleccionadas(etiquetas) {
+            const checkboxes = document.querySelectorAll('.etiquetas-opciones input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = etiquetas.includes(checkbox.value);
+                const label = checkbox.parentElement;
+                if (checkbox.checked) {
+                    label.classList.add('seleccionada');
+                } else {
+                    label.classList.remove('seleccionada');
+                }
+            });
+        }
+
+        function guardarEnlace() {
+            const link = document.getElementById('link').value;
+            const title = document.getElementById('title').value;
+            const webName = document.getElementById('webName').value;
+            const deporte = document.getElementById('deporte').value;
+            const color = document.getElementById('codigoColor').value;
+            const idioma = document.getElementById('idioma').value;
+            const tipoEnlace = document.getElementById('tipoEnlace').value;
+            const puntuacion = puntuacionSeleccionada;
+            const etiquetas = obtenerEtiquetasSeleccionadas();
+
+            const mostrarIcono = tipoEnlace === 'acestream';
+            const mostrarMulti = tipoEnlace === 'fuentes';
+
+            if (link && title) {
+                if (indiceEdicion !== null) {
+                    enlacesGuardados[indiceEdicion] = { 
+                        link, 
+                        title, 
+                        webName, 
+                        deporte, 
+                        color, 
+                        idioma, 
+                        mostrarIcono, 
+                        mostrarMulti, 
+                        puntuacion, 
+                        etiquetas,
+                        favorito: enlacesGuardados[indiceEdicion].favorito || false 
+                    };
+                    indiceEdicion = null;
+                    mostrarNotificacion('Enlace actualizado correctamente.');
+                } else {
+                    const enlaceExistente = enlacesGuardados.some((enlace) => enlace.link === link);
+                    if (enlaceExistente) {
+                        mostrarNotificacion('Este enlace ya existe. No se puede duplicar.');
+                        return;
+                    }
+
+                    enlacesGuardados.push({ 
+                        link, 
+                        title, 
+                        webName, 
+                        deporte, 
+                        color, 
+                        idioma, 
+                        mostrarIcono, 
+                        mostrarMulti, 
+                        puntuacion, 
+                        etiquetas,
+                        favorito: false 
+                    });
+                    mostrarNotificacion('Enlace guardado correctamente.');
+                }
+
+                document.getElementById('link').value = '';
+                document.getElementById('title').value = '';
+                document.getElementById('webName').value = '';
+                seleccionarPuntuacion(0);
+                establecerEtiquetasSeleccionadas([]);
+                mostrarFormulario();
+                localStorage.setItem('enlaces', JSON.stringify(enlacesGuardados));
+                filtrarEnlaces();
+            } else {
+                mostrarNotificacion('Por favor, ingresa un enlace y un título.');
+            }
+        }
+
+        function editarEnlace(index) {
+            const enlace = enlacesGuardados[index];
+            indiceEdicion = index;
+
+            document.getElementById('link').value = enlace.link;
+            document.getElementById('title').value = enlace.title;
+            document.getElementById('webName').value = enlace.webName || '';
+            document.getElementById('deporte').value = enlace.deporte;
+            document.getElementById('color').value = enlace.color;
+            document.getElementById('codigoColor').value = enlace.color;
+            document.getElementById('idioma').value = enlace.idioma;
+            
+            const tipoEnlace = enlace.mostrarMulti ? 'fuentes' : enlace.mostrarIcono ? 'acestream' : 'web';
+            document.getElementById('tipoEnlace').value = tipoEnlace;
+            
+            seleccionarPuntuacion(enlace.puntuacion);
+            establecerEtiquetasSeleccionadas(enlace.etiquetas || []);
+
+            mostrarFormulario();
+        }
+
+        function cambiarPosicion(index) {
+            if (indiceCambiar === null) {
+                indiceCambiar = index;
+                mostrarNotificacion('Selecciona otro enlace para mover el primero detrás del segundo.');
+            } else {
+                if (indiceCambiar === index) {
+                    mostrarNotificacion('No puedes mover un enlace detrás de sí mismo.');
+                    indiceCambiar = null;
+                    return;
+                }
+
+                const enlaceMovido = enlacesGuardados[indiceCambiar];
+                enlacesGuardados.splice(indiceCambiar, 1);
+                const nuevaPosicion = index > indiceCambiar ? index : index + 1;
+                enlacesGuardados.splice(nuevaPosicion, 0, enlaceMovido);
+
+                localStorage.setItem('enlaces', JSON.stringify(enlacesGuardados));
+                filtrarEnlaces();
+                mostrarNotificacion('Enlace movido correctamente.');
+                indiceCambiar = null;
+            }
+        }
+
+        function borrarEnlace(index) {
+            if (confirm('¿Estás seguro de que quieres eliminar este enlace?')) {
+                enlacesGuardados.splice(index, 1);
+                localStorage.setItem('enlaces', JSON.stringify(enlacesGuardados));
+                filtrarEnlaces();
+                mostrarNotificacion('Enlace eliminado correctamente.');
+            }
+        }
+
+        function borrarTodosLosEnlaces() {
+            if (confirm('¿Estás seguro de que quieres borrar todos los enlaces? Esta acción no se puede deshacer.')) {
+                enlacesGuardados = [];
+                localStorage.setItem('enlaces', JSON.stringify(enlacesGuardados));
+                localStorage.setItem('mostrarSoloFavoritos', false);
+                mostrarSoloFavoritos = false;
+                document.querySelector('.boton-favoritos').textContent = 'Mostrar solo favoritos';
+                filtrarEnlaces();
+                mostrarNotificacion('Todos los enlaces han sido borrados.');
+            }
+        }
+
+        function exportarEnlaces() {
+            const contenido = JSON.stringify(enlacesGuardados, null, 2);
+            const blob = new Blob([contenido], { type: 'application/json' });
+            const enlaceDescarga = document.createElement('a');
+            enlaceDescarga.href = URL.createObjectURL(blob);
+            enlaceDescarga.download = 'enlaces_chefo_tv.json';
+            enlaceDescarga.click();
+            mostrarNotificacion('Enlaces exportados correctamente.');
+        }
+
+        function importarEnlaces(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const nuevosEnlaces = JSON.parse(e.target.result);
+                    if (!Array.isArray(nuevosEnlaces)) throw new Error('Formato inválido');
+
+                    nuevosEnlaces.forEach((nuevoEnlace) => {
+                        const existe = enlacesGuardados.some(
+                            (enlace) => enlace.link === nuevoEnlace.link
+                        );
+                        if (!existe) {
+                            enlacesGuardados.push({ 
+                                ...nuevoEnlace, 
+                                favorito: nuevoEnlace.favorito || false,
+                                etiquetas: nuevoEnlace.etiquetas || []
+                            });
+                        }
+                    });
+
+                    localStorage.setItem('enlaces', JSON.stringify(enlacesGuardados));
+                    filtrarEnlaces();
+                    mostrarNotificacion('Enlaces importados correctamente. Se han descartados duplicados.');
+                } catch (error) {
+                    mostrarNotificacion('El archivo no es válido.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function importarDesdeTexto() {
+            const modal = document.getElementById('modalImportar');
+            modal.style.display = 'block';
+        }
+
+        function cerrarModalImportar() {
+            const modal = document.getElementById('modalImportar');
+            modal.style.display = 'none';
+        }
+
+        function procesarTextoImportado() {
+            const texto = document.getElementById('textoImportar').value;
+            if (texto) {
+                try {
+                    const nuevosEnlaces = JSON.parse(texto);
+                    if (!Array.isArray(nuevosEnlaces)) throw new Error('Formato inválido');
+
+                    nuevosEnlaces.forEach((nuevoEnlace) => {
+                        const existe = enlacesGuardados.some(
+                            (enlace) => enlace.link === nuevoEnlace.link
+                        );
+                        if (!existe) {
+                            enlacesGuardados.push({ 
+                                ...nuevoEnlace, 
+                                favorito: nuevoEnlace.favorito || false,
+                                etiquetas: nuevoEnlace.etiquetas || []
+                            });
+                        }
+                    });
+
+                    localStorage.setItem('enlaces', JSON.stringify(enlacesGuardados));
+                    filtrarEnlaces();
+                    mostrarNotificacion('Enlaces importados correctamente. Se han descartados duplicados.');
+                    cerrarModalImportar();
+                } catch (error) {
+                    mostrarNotificacion('El texto no es válido. Asegúrate de pegar un JSON correcto.');
+                }
+            } else {
+                mostrarNotificacion('No se ha pegado ningún texto.');
+            }
+        }
+
+        function mostrarMenuAjustes() {
+            const menuAjustes = document.getElementById('menuAjustes');
+            menuAjustes.classList.toggle('mostrar');
+            
+            if (menuAjustes.classList.contains('mostrar')) {
+                setTimeout(() => {
+                    document.addEventListener('click', cerrarMenuSiClickFuera);
+                }, 0);
+            } else {
+                document.removeEventListener('click', cerrarMenuSiClickFuera);
+            }
+        }
+
+        function cerrarMenuSiClickFuera(event) {
+            const menuAjustes = document.getElementById('menuAjustes');
+            const botonAjustes = document.querySelector('.boton-ajustes');
+            
+            if (!menuAjustes.contains(event.target) && !botonAjustes.contains(event.target)) {
+                menuAjustes.classList.remove('mostrar');
+                document.removeEventListener('click', cerrarMenuSiClickFuera);
+            }
+        }
+
+        let contadorClicks = 0;
+        let temporizador = null;
+
+        function manejarClicksAjustes() {
+            contadorClicks++;
+
+            if (contadorClicks === 1) {
+                temporizador = setTimeout(() => {
+                    contadorClicks = 0;
+                }, 1000);
+            } else if (contadorClicks === 3) {
+                clearTimeout(temporizador);
+                mostrarElementosOcultos();
+                contadorClicks = 0;
+            }
+        }
+
+        function mostrarElementosOcultos() {
+            const titulo = document.querySelector('h1');
+            const botonAgregar = document.getElementById('botonAgregar');
+            titulo.style.opacity = 1;
+            botonAgregar.style.opacity = 1;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const modoAperturaGuardado = localStorage.getItem('modoApertura');
+            if (modoAperturaGuardado) {
+                modoApertura = modoAperturaGuardado;
+                document.getElementById('selectorApertura').value = modoApertura;
+            }
+
+            cargarEstadoCategorias();
+            filtrarEnlaces();
+
+            if (mostrarSoloFavoritos) {
+                document.querySelector('.boton-favoritos').textContent = 'Mostrar todos';
+            }
+        });
+
+        document.querySelector('.boton-ajustes').addEventListener('click', manejarClicksAjustes);
+    </script>
+</body>
+</html>
