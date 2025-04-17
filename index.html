@@ -342,20 +342,20 @@
             margin: 25px 0;
             text-align: center;
             position: relative;
-            max-width: 600px;
+            max-width: 400px; /* Reducido de 600px */
             margin-left: auto;
             margin-right: auto;
         }
         
         #searchInput {
-            padding: 12px 20px;
+            padding: 10px 15px; /* Reducido el padding vertical */
             width: 100%;
             border: 1px solid #ddd;
             border-radius: 30px;
-            font-size: 1rem;
+            font-size: 0.95rem; /* Tamaño de fuente ligeramente reducido */
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             transition: var(--transition);
-            padding-left: 45px;
+            padding-left: 40px; /* Ajustado para el icono */
         }
         
         #searchInput:focus {
@@ -367,15 +367,11 @@
         .search-box::before {
             content: "🔍";
             position: absolute;
-            left: 15px;
+            left: 12px;
             top: 50%;
             transform: translateY(-50%);
-            font-size: 1.1rem;
+            font-size: 1rem; /* Tamaño reducido */
             color: var(--text-light);
-        }
-        
-        .active {
-            background-color: var(--primary-color) !important;
         }
         
         .favoritos-container {
@@ -507,6 +503,10 @@
                 justify-content: flex-start;
                 padding: 5px 10px;
             }
+
+            .search-box {
+                max-width: 90%; /* Más ancho en móviles para mejor usabilidad */
+            }
         }
         
         /* Animación para los elementos del canal */
@@ -562,11 +562,11 @@
         
         <div class="controls">
             <button id="fetchBtn">Cargar Todos los Canales</button>
-            <button id="sportsOnlyBtn">Mostrar Solo Deportes</button>
+            <!-- Botón "Mostrar Solo Deportes" eliminado -->
         </div>
         
         <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Buscar canales deportivos...">
+            <input type="text" id="searchInput" placeholder="Buscar canales...">
         </div>
         
         <div id="loading" class="loading">
@@ -584,10 +584,8 @@
     </div>
 
     <script>
-        // El código JavaScript permanece igual que en tu versión original
         document.addEventListener('DOMContentLoaded', function() {
             const fetchBtn = document.getElementById('fetchBtn');
-            const sportsOnlyBtn = document.getElementById('sportsOnlyBtn');
             const channelsContainer = document.getElementById('channelsContainer');
             const loading = document.getElementById('loading');
             const errorDiv = document.getElementById('error');
@@ -789,7 +787,7 @@
                 }
             }
             
-            function displayChannels(channels, sportsOnly = false) {
+            function displayChannels(channels) {
                 channelsContainer.innerHTML = '';
                 
                 if (channels.length === 0) {
@@ -844,7 +842,7 @@
             function filterChannels() {
                 const searchTerm = searchInput.value.toLowerCase();
                 if (!searchTerm) {
-                    displayChannels(allChannels, sportsOnlyBtn.classList.contains('active'));
+                    displayChannels(allChannels);
                     return;
                 }
                 
@@ -855,15 +853,10 @@
                            (channel.time && channel.time.includes(searchTerm));
                 });
                 
-                displayChannels(filtered, sportsOnlyBtn.classList.contains('active'));
+                displayChannels(filtered);
             }
             
             searchInput.addEventListener('input', filterChannels);
-            
-            sportsOnlyBtn.addEventListener('click', function() {
-                this.classList.toggle('active');
-                filterChannels();
-            });
             
             fetchBtn.addEventListener('click', function() {
                 loading.style.display = 'block';
@@ -882,7 +875,7 @@
                     .then(data => {
                         if (data.contents) {
                             allChannels = extractChannels(data.contents);
-                            displayChannels(allChannels, sportsOnlyBtn.classList.contains('active'));
+                            displayChannels(allChannels);
                         } else {
                             throw new Error('No se pudo obtener el contenido de la página');
                         }
