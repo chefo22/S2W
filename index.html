@@ -203,20 +203,6 @@
             align-items: center;
             justify-content: center;
         }
-        .boton-fullscreen-reproductor {
-            width: 30px;
-            height: 30px;
-            padding: 0;
-            background-color: #FF9800;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
         .boton-cerrar-reproductor:hover {
             background-color: #9e4a5a;
         }
@@ -225,9 +211,6 @@
         }
         .boton-refrescar-reproductor:hover {
             background-color: #0b7dda;
-        }
-        .boton-fullscreen-reproductor:hover {
-            background-color: #e68a00;
         }
         .search-box {
             margin: 20px 0;
@@ -282,26 +265,12 @@
         .modal-contenido button {
             margin-right: 10px;
         }
-        .reproductor-fullscreen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 9999;
-            border: none;
-            resize: none;
-            max-height: none;
-            transform: none;
-            border-radius: 0;
-        }
     </style>
 </head>
 <body>
     <div class="player-controls" style="display: none;">
         <button class="boton-guardar-reproductor" id="botonGuardarReproductor" onclick="mostrarModalFavorito()">+</button>
         <button class="boton-refrescar-reproductor" id="botonRefrescarReproductor" onclick="refrescarReproductor()">↻</button>
-        <button class="boton-fullscreen-reproductor" id="botonFullscreenReproductor" onclick="alternarPantallaCompleta()">⛶</button>
         <button class="boton-cerrar-reproductor" id="botonCerrarReproductor" onclick="cerrarReproductor()">×</button>
     </div>
 
@@ -361,7 +330,6 @@
             const botonCerrar = document.getElementById('botonCerrarReproductor');
             const botonGuardar = document.getElementById('botonGuardarReproductor');
             const botonRefrescar = document.getElementById('botonRefrescarReproductor');
-            const botonFullscreen = document.getElementById('botonFullscreenReproductor');
             const favoritosContainer = document.getElementById('favoritosContainer');
             const favoritosList = document.getElementById('favoritosList');
             const playerControls = document.querySelector('.player-controls');
@@ -372,7 +340,6 @@
             let currentChannel = null;
             let alturaReproductor = localStorage.getItem('alturaReproductor') || '250px';
             let favoritos = JSON.parse(localStorage.getItem('canalesFavoritos')) || [];
-            let isFullscreen = false;
             
             if (favoritos.length > 0) {
                 mostrarFavoritos();
@@ -421,61 +388,6 @@
                     videoFrame.src = currentChannel.url;
                 }
             }
-            
-            window.alternarPantallaCompleta = function() {
-                if (!isFullscreen) {
-                    // Entrar en pantalla completa
-                    if (reproductor.requestFullscreen) {
-                        reproductor.requestFullscreen();
-                    } else if (reproductor.webkitRequestFullscreen) {
-                        reproductor.webkitRequestFullscreen();
-                    } else if (reproductor.msRequestFullscreen) {
-                        reproductor.msRequestFullscreen();
-                    }
-                    
-                    reproductor.classList.add('reproductor-fullscreen');
-                    botonFullscreen.textContent = '🗗';
-                    isFullscreen = true;
-                } else {
-                    // Salir de pantalla completa
-                    if (document.exitFullscreen) {
-                        document.exitFullscreen();
-                    } else if (document.webkitExitFullscreen) {
-                        document.webkitExitFullscreen();
-                    } else if (document.msExitFullscreen) {
-                        document.msExitFullscreen();
-                    }
-                    
-                    reproductor.classList.remove('reproductor-fullscreen');
-                    botonFullscreen.textContent = '⛶';
-                    isFullscreen = false;
-                }
-            }
-            
-            // Escuchar cambios en el estado de pantalla completa
-            document.addEventListener('fullscreenchange', function() {
-                if (!document.fullscreenElement) {
-                    reproductor.classList.remove('reproductor-fullscreen');
-                    botonFullscreen.textContent = '⛶';
-                    isFullscreen = false;
-                }
-            });
-            
-            document.addEventListener('webkitfullscreenchange', function() {
-                if (!document.webkitFullscreenElement) {
-                    reproductor.classList.remove('reproductor-fullscreen');
-                    botonFullscreen.textContent = '⛶';
-                    isFullscreen = false;
-                }
-            });
-            
-            document.addEventListener('msfullscreenchange', function() {
-                if (!document.msFullscreenElement) {
-                    reproductor.classList.remove('reproductor-fullscreen');
-                    botonFullscreen.textContent = '⛶';
-                    isFullscreen = false;
-                }
-            });
             
             function mostrarFavoritos() {
                 if (favoritos.length === 0) {
@@ -534,9 +446,6 @@
                 reproductor.style.display = 'block';
                 reproductor.style.height = alturaReproductor;
                 playerControls.style.display = 'flex';
-                isFullscreen = false;
-                botonFullscreen.textContent = '⛶';
-                reproductor.classList.remove('reproductor-fullscreen');
                 
                 reproductor.addEventListener('pointerup', function() {
                     alturaReproductor = reproductor.style.height;
@@ -545,24 +454,10 @@
             }
             
             window.cerrarReproductor = function() {
-                // Salir de pantalla completa si está activa
-                if (isFullscreen) {
-                    if (document.exitFullscreen) {
-                        document.exitFullscreen();
-                    } else if (document.webkitExitFullscreen) {
-                        document.webkitExitFullscreen();
-                    } else if (document.msExitFullscreen) {
-                        document.msExitFullscreen();
-                    }
-                }
-                
                 videoFrame.src = '';
                 reproductor.style.display = 'none';
                 playerControls.style.display = 'none';
                 currentChannel = null;
-                isFullscreen = false;
-                botonFullscreen.textContent = '⛶';
-                reproductor.classList.remove('reproductor-fullscreen');
             }
             
             function updateChannelCounter(count) {
@@ -573,52 +468,52 @@
                 try {
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(htmlContent, 'text/html');
-                    const elements = Array.from(doc.querySelectorAll('*'));
                     const channels = [];
-                    const uniqueKeys = new Set();
+                    const timeRegex = /(\d{2}:\d{2})/;
+                    const channelRegex = /(.+?) \(CH-(\d+)\)/i;
+                    const processedChannels = new Set();
+
+                    // Buscar solo bloques <strong> que contengan CH-
+                    const blocks = doc.querySelectorAll('strong');
                     
-                    elements.forEach(element => {
-                        const textContent = element.textContent.trim();
-                        const channelMatch = textContent.match(/(\d{2}:\d{2})?\s*(.+?)\s*\(CH-(\d+)\)/i);
-                        
-                        if (channelMatch) {
-                            const time = channelMatch[1] || '';
-                            const number = channelMatch[3];
-                            let name = '';
-                            let event = '';
-                            
-                            const redSpans = element.querySelectorAll('span[style*="color: red"], span[style*="color:red"]');
-                            if (redSpans.length > 0) {
-                                name = redSpans[0].textContent.trim();
-                                
-                                const fullText = element.textContent;
-                                const timeIndex = time ? fullText.indexOf(time) + time.length : 0;
-                                const nameIndex = fullText.indexOf(name);
-                                
-                                if (nameIndex > timeIndex) {
-                                    event = fullText.substring(timeIndex, nameIndex).trim();
-                                }
-                            } else {
-                                name = channelMatch[2].trim();
-                            }
-                            
-                            const key = `${name}-${number}`;
-                            
-                            if (!uniqueKeys.has(key)) {
-                                uniqueKeys.add(key);
-                                channels.push({
-                                    key: key,
-                                    name: name,
-                                    number: number,
-                                    time: time,
-                                    event: event,
-                                    rawText: textContent,
-                                    element: element
-                                });
-                            }
+                    blocks.forEach(block => {
+                        const blockText = block.textContent.trim();
+                        if (!blockText.includes("CH-")) return;
+
+                        const timeMatch = blockText.match(timeRegex);
+                        const time = timeMatch ? timeMatch[1] : '';
+
+                        // Extraer evento: texto entre hora y primer CH-
+                        let event = '';
+                        if (time) {
+                            event = blockText.split(time)[1].split(/\(CH-\d+\)/)[0].trim();
+                        } else {
+                            event = blockText.split(/\(CH-\d+\)/)[0].trim();
                         }
+
+                        // Extraer canales de los enlaces <a>
+                        const links = block.querySelectorAll('a');
+                        links.forEach(link => {
+                            const channelMatch = link.textContent.match(channelRegex);
+                            if (channelMatch) {
+                                const channelKey = `${channelMatch[1]}-${channelMatch[2]}`;
+                                
+                                if (!processedChannels.has(channelKey)) {
+                                    processedChannels.add(channelKey);
+                                    channels.push({
+                                        key: channelKey,
+                                        name: channelMatch[1].trim(),
+                                        number: channelMatch[2],
+                                        time: time,
+                                        event: event,
+                                        url: link.href,
+                                        rawText: `${time} ${event} ${channelMatch[1]} (CH-${channelMatch[2]})`
+                                    });
+                                }
+                            }
+                        });
                     });
-                    
+
                     return channels;
                 } catch (error) {
                     console.error('Error al extraer canales:', error);
@@ -670,8 +565,7 @@
                     btn.innerHTML = btnContent;
                     
                     btn.addEventListener('click', function() {
-                        const streamUrl = `https://stream2wetch.top/embed/stream-${channel.number}.php`;
-                        reproducirCanal(streamUrl, channel.name, channel.number);
+                        reproducirCanal(channel.url, channel.name, channel.number);
                     });
                     
                     channelItem.appendChild(btn);
