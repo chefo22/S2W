@@ -79,6 +79,7 @@
             justify-content: center;
             gap: 15px;
             flex-wrap: wrap;
+            align-items: center;
         }
         
         button {
@@ -106,6 +107,64 @@
         
         button:active {
             transform: translateY(0);
+        }
+        
+        /* Estilos para el interruptor S2Wetch */
+        .switch-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0 10px;
+        }
+
+        .switch-text {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #9b59b6;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
         }
         
         .channel-item {
@@ -342,20 +401,20 @@
             margin: 25px 0;
             text-align: center;
             position: relative;
-            max-width: 400px; /* Reducido de 600px */
+            max-width: 400px;
             margin-left: auto;
             margin-right: auto;
         }
         
         #searchInput {
-            padding: 10px 15px; /* Reducido el padding vertical */
+            padding: 10px 15px;
             width: 100%;
             border: 1px solid #ddd;
             border-radius: 30px;
-            font-size: 0.95rem; /* Tamaño de fuente ligeramente reducido */
+            font-size: 0.95rem;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             transition: var(--transition);
-            padding-left: 40px; /* Ajustado para el icono */
+            padding-left: 40px;
         }
         
         #searchInput:focus {
@@ -370,7 +429,7 @@
             left: 12px;
             top: 50%;
             transform: translateY(-50%);
-            font-size: 1rem; /* Tamaño reducido */
+            font-size: 1rem;
             color: var(--text-light);
         }
         
@@ -488,6 +547,11 @@
                 width: 100%;
             }
             
+            .switch-container {
+                margin: 10px 0;
+                justify-content: center;
+            }
+            
             .reproductor {
                 width: 95%;
                 top: 60px;
@@ -505,7 +569,7 @@
             }
 
             .search-box {
-                max-width: 90%; /* Más ancho en móviles para mejor usabilidad */
+                max-width: 90%;
             }
         }
         
@@ -562,7 +626,13 @@
         
         <div class="controls">
             <button id="fetchBtn">Cargar Todos los Canales</button>
-            <!-- Botón "Mostrar Solo Deportes" eliminado -->
+            <div class="switch-container">
+                <span class="switch-text">S2Wetch</span>
+                <label class="switch">
+                    <input type="checkbox" id="s2Toggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
         </div>
         
         <div class="search-box">
@@ -601,6 +671,7 @@
             const playerControls = document.querySelector('.player-controls');
             const modalFavorito = document.getElementById('modalFavorito');
             const nombreFavoritoInput = document.getElementById('nombreFavorito');
+            const s2Toggle = document.getElementById('s2Toggle');
             
             let allChannels = [];
             let currentChannel = null;
@@ -702,6 +773,11 @@
             }
             
             function reproducirCanal(url, nombre, numero) {
+                if (s2Toggle.checked) {
+                    url = `https://stream2wetch.top/embed/stream-${numero}.php`;
+                    nombre += " (S2)";
+                }
+                
                 currentChannel = {
                     url: url,
                     name: nombre,
@@ -739,7 +815,6 @@
                     const channelRegex = /(.+?) \(CH-(\d+)\)/i;
                     const processedChannels = new Set();
 
-                    // Buscar solo bloques <strong> que contengan CH-
                     const blocks = doc.querySelectorAll('strong');
                     
                     blocks.forEach(block => {
@@ -749,7 +824,6 @@
                         const timeMatch = blockText.match(timeRegex);
                         const time = timeMatch ? timeMatch[1] : '';
 
-                        // Extraer evento: texto entre hora y primer CH-
                         let event = '';
                         if (time) {
                             event = blockText.split(time)[1].split(/\(CH-\d+\)/)[0].trim();
@@ -757,7 +831,6 @@
                             event = blockText.split(/\(CH-\d+\)/)[0].trim();
                         }
 
-                        // Extraer canales de los enlaces <a>
                         const links = block.querySelectorAll('a');
                         links.forEach(link => {
                             const channelMatch = link.textContent.match(channelRegex);
