@@ -1039,7 +1039,6 @@
                     const channels = [];
                     const timeRegex = /(\d{2}:\d{2})/;
                     const channelRegex = /(.+?) \(CH-(\d+)\)/i;
-                    const processedChannels = new Set();
 
                     const blocks = doc.querySelectorAll('strong');
                     
@@ -1061,20 +1060,14 @@
                         links.forEach(link => {
                             const channelMatch = link.textContent.match(channelRegex);
                             if (channelMatch) {
-                                const channelKey = `${channelMatch[1]}-${channelMatch[2]}`;
-                                
-                                if (!processedChannels.has(channelKey)) {
-                                    processedChannels.add(channelKey);
-                                    channels.push({
-                                        key: channelKey,
-                                        name: channelMatch[1].trim(),
-                                        number: channelMatch[2],
-                                        time: time,
-                                        event: event,
-                                        url: link.href,
-                                        rawText: `${time} ${event} ${channelMatch[1]} (CH-${channelMatch[2]})`
-                                    });
-                                }
+                                channels.push({
+                                    name: channelMatch[1].trim(),
+                                    number: channelMatch[2],
+                                    time: time,
+                                    event: event,
+                                    url: link.href,
+                                    rawText: `${time} ${event} ${channelMatch[1]} (CH-${channelMatch[2]})`
+                                });
                             }
                         });
                     });
