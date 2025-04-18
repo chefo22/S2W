@@ -331,18 +331,6 @@
             to { transform: rotate(360deg); }
         }
         
-        .error {
-            color: var(--accent-color);
-            margin: 15px 0;
-            text-align: center;
-            font-weight: 600;
-            padding: 10px;
-            background-color: rgba(231, 76, 60, 0.1);
-            border-radius: 6px;
-            border-left: 3px solid var(--accent-color);
-            font-size: 0.85rem;
-        }
-        
         /* REPRODUCTOR CON ANIMACIONES DE TV */
         .reproductor-container {
             position: fixed;
@@ -765,8 +753,6 @@
             Cargando canales desde DaddyLive, por favor espera...
         </div>
         
-        <div id="error" class="error"></div>
-        
         <div class="favoritos-container" id="favoritosContainer" style="display: none;">
             <div class="favoritos-title">Tus Canales Favoritos</div>
             <div id="favoritosList"></div>
@@ -815,7 +801,6 @@
             const fetchBtn = document.getElementById('fetchBtn');
             const channelsContainer = document.getElementById('channelsContainer');
             const loading = document.getElementById('loading');
-            const errorDiv = document.getElementById('error');
             const searchInput = document.getElementById('searchInput');
             const channelCounter = document.getElementById('channelCounter');
             const videoFrame = document.getElementById('videoFrame');
@@ -1074,7 +1059,6 @@
                 channelsContainer.innerHTML = '';
                 
                 if (channels.length === 0) {
-                    channelsContainer.innerHTML = '<div class="error">No se encontraron canales.</div>';
                     updateChannelCounter(0);
                     return;
                 }
@@ -1147,7 +1131,6 @@
             
             fetchBtn.addEventListener('click', function() {
                 loading.style.display = 'block';
-                errorDiv.textContent = '';
                 channelsContainer.innerHTML = '';
                 updateChannelCounter(0);
                 
@@ -1163,22 +1146,16 @@
                         if (data.contents) {
                             allChannels = extractChannels(data.contents);
                             displayChannels(allChannels);
-                        } else {
-                            throw new Error('No se pudo obtener el contenido de la página');
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        errorDiv.textContent = `Error: ${error.message || 'No se pudo cargar la página'}`;
                     })
                     .finally(() => {
                         loading.style.display = 'none';
                     });
             });
         });
-    </script>
-</body>
-</html>
     </script>
 </body>
 </html>
