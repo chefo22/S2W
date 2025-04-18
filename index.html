@@ -527,6 +527,27 @@
             margin: 0;
         }
         
+        /* Estilos para el input directo de canal */
+        .direct-channel-input {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .direct-channel-input input {
+            padding: 10px 12px;
+            width: 80px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            text-align: center;
+        }
+        
+        .direct-channel-input button {
+            padding: 10px 15px;
+            white-space: nowrap;
+        }
+        
         /* Responsive design */
         @media (max-width: 768px) {
             .container {
@@ -570,6 +591,11 @@
 
             .search-box {
                 max-width: 90%;
+            }
+            
+            .direct-channel-input {
+                width: 100%;
+                justify-content: center;
             }
         }
         
@@ -633,6 +659,10 @@
                     <span class="slider"></span>
                 </label>
             </div>
+            <div class="direct-channel-input">
+                <input type="number" id="directChannelInput" placeholder="N° Canal" min="1">
+                <button id="playDirectChannel">Reproducir</button>
+            </div>
         </div>
         
         <div class="search-box">
@@ -672,6 +702,8 @@
             const modalFavorito = document.getElementById('modalFavorito');
             const nombreFavoritoInput = document.getElementById('nombreFavorito');
             const s2Toggle = document.getElementById('s2Toggle');
+            const directChannelInput = document.getElementById('directChannelInput');
+            const playDirectChannelBtn = document.getElementById('playDirectChannel');
             
             let allChannels = [];
             let currentChannel = null;
@@ -681,6 +713,24 @@
             if (favoritos.length > 0) {
                 mostrarFavoritos();
             }
+            
+            // Función para reproducir canal directo
+            playDirectChannelBtn.addEventListener('click', function() {
+                const channelNumber = directChannelInput.value.trim();
+                if (!channelNumber) {
+                    alert('Por favor ingresa un número de canal');
+                    return;
+                }
+                
+                const baseUrl = s2Toggle.checked 
+                    ? 'https://stream2wetch.top/embed/stream-{n}.php' 
+                    : 'https://daddylivehd1.click/channel-{n}';
+                
+                const url = baseUrl.replace('{n}', channelNumber);
+                const nombre = `Canal ${channelNumber}` + (s2Toggle.checked ? " (S2)" : "");
+                
+                reproducirCanal(url, nombre, channelNumber);
+            });
             
             window.mostrarModalFavorito = function() {
                 if (!currentChannel) return;
@@ -773,11 +823,6 @@
             }
             
             function reproducirCanal(url, nombre, numero) {
-                if (s2Toggle.checked) {
-                    url = `https://stream2wetch.top/embed/stream-${numero}.php`;
-                    nombre += " (S2)";
-                }
-                
                 currentChannel = {
                     url: url,
                     name: nombre,
