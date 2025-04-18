@@ -109,7 +109,6 @@
             transform: translateY(0);
         }
         
-        /* Estilos para el interruptor S2Wetch */
         .switch-container {
             display: flex;
             align-items: center;
@@ -527,7 +526,6 @@
             margin: 0;
         }
         
-        /* Estilos para el input directo de canal */
         .direct-channel-input {
             display: flex;
             gap: 8px;
@@ -548,7 +546,6 @@
             white-space: nowrap;
         }
         
-        /* Responsive design */
         @media (max-width: 768px) {
             .container {
                 padding: 15px;
@@ -599,7 +596,6 @@
             }
         }
         
-        /* Animación para los elementos del canal */
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -722,14 +718,43 @@
                     return;
                 }
                 
-                const baseUrl = s2Toggle.checked 
-                    ? 'https://stream2wetch.top/embed/stream-{n}.php' 
-                    : 'https://daddylivehd1.click/channel-{n}';
-                
-                const url = baseUrl.replace('{n}', channelNumber);
-                const nombre = `Canal ${channelNumber}` + (s2Toggle.checked ? " (S2)" : "");
+                let url, nombre;
+                if (s2Toggle.checked) {
+                    url = `https://stream2wetch.top/embed/stream-${channelNumber}.php`;
+                    nombre = `Canal ${channelNumber} (S2Wetch)`;
+                } else {
+                    url = `https://daddylivehd1.click/channel-${channelNumber}`;
+                    nombre = `Canal ${channelNumber} (DaddyLive)`;
+                }
                 
                 reproducirCanal(url, nombre, channelNumber);
+            });
+            
+            // Permitir reproducir con Enter
+            directChannelInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    playDirectChannelBtn.click();
+                }
+            });
+            
+            // Actualizar reproductor cuando cambia el interruptor S2Wetch
+            s2Toggle.addEventListener('change', function() {
+                if (currentChannel) {
+                    let newUrl, newName;
+                    const baseName = currentChannel.name.replace(/\(S2Wetch\)|\(DaddyLive\)/g, '').trim();
+                    
+                    if (s2Toggle.checked) {
+                        newUrl = `https://stream2wetch.top/embed/stream-${currentChannel.number}.php`;
+                        newName = `${baseName} (S2Wetch)`;
+                    } else {
+                        newUrl = `https://daddylivehd1.click/channel-${currentChannel.number}`;
+                        newName = `${baseName} (DaddyLive)`;
+                    }
+                    
+                    currentChannel.url = newUrl;
+                    currentChannel.name = newName;
+                    videoFrame.src = newUrl;
+                }
             });
             
             window.mostrarModalFavorito = function() {
