@@ -490,6 +490,32 @@
             border-bottom: 1px solid rgba(255,255,255,0.2);
         }
         
+        .channel-list-search {
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .channel-list-search input {
+            width: 100%;
+            padding: 8px 15px 8px 35px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            background-color: rgba(0,0,0,0.3);
+            color: white;
+            font-size: 14px;
+        }
+
+        .channel-list-search::before {
+            content: "🔍";
+            position: absolute;
+            left: 25px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.6);
+            z-index: 1;
+        }
+        
         .channel-list-item {
             padding: 10px;
             color: white;
@@ -588,6 +614,9 @@
 
     <div class="channel-list-container" id="channelListContainer">
         <div class="channel-list-title">Lista de Canales</div>
+        <div class="channel-list-search">
+            <input type="text" id="channelListSearch" placeholder="Buscar canales...">
+        </div>
         <div id="channelListContent"></div>
     </div>
 
@@ -725,6 +754,7 @@
             const channelListContainer = document.getElementById('channelListContainer');
             const channelListContent = document.getElementById('channelListContent');
             const fullscreenListBtn = document.getElementById('fullscreenListBtn');
+            const channelListSearch = document.getElementById('channelListSearch');
             
             let allChannels = [];
             let currentChannel = null;
@@ -749,24 +779,44 @@
                 
                 channelListContent.innerHTML = '';
                 
-                allChannels.forEach(channel => {
-                    const item = document.createElement('div');
-                    item.className = 'channel-list-item';
-                    item.innerHTML = `<span class="channel-list-number">CH-${channel.number}</span>${channel.name}`;
+                function renderFilteredChannels(filterTerm = '') {
+                    channelListContent.innerHTML = '';
                     
-                    item.addEventListener('click', function() {
-                        let url = channel.url;
-                        if (s2Toggle.checked) {
-                            url = `https://stream2wetch.top/embed/stream-${channel.number}.php`;
-                        }
-                        reproducirCanal(url, channel.name, channel.number);
-                        channelListContainer.classList.remove('show');
+                    const filtered = filterTerm 
+                        ? allChannels.filter(channel => 
+                            channel.name.toLowerCase().includes(filterTerm) || 
+                            channel.number.includes(filterTerm))
+                        : allChannels;
+                    
+                    filtered.forEach(channel => {
+                        const item = document.createElement('div');
+                        item.className = 'channel-list-item';
+                        item.innerHTML = `<span class="channel-list-number">CH-${channel.number}</span>${channel.name}`;
+                        
+                        item.addEventListener('click', function() {
+                            let url = channel.url;
+                            if (s2Toggle.checked) {
+                                url = `https://stream2wetch.top/embed/stream-${channel.number}.php`;
+                            }
+                            reproducirCanal(url, channel.name, channel.number);
+                            channelListContainer.classList.remove('show');
+                        });
+                        
+                        channelListContent.appendChild(item);
                     });
-                    
-                    channelListContent.appendChild(item);
+                }
+                
+                renderFilteredChannels();
+                
+                channelListSearch.addEventListener('input', function() {
+                    renderFilteredChannels(this.value.toLowerCase());
                 });
                 
                 channelListContainer.classList.toggle('show');
+                
+                setTimeout(() => {
+                    channelListSearch.focus();
+                }, 100);
             }
             
             playDirectChannelBtn.addEventListener('click', function() {
