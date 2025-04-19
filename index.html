@@ -1182,11 +1182,19 @@
                         if (!blockText.includes("CH-")) return;
 
                         const timeMatch = blockText.match(timeRegex);
-                        const time = timeMatch ? timeMatch[1] : '';
+                        let time = timeMatch ? timeMatch[1] : '';
+
+                        // Ajustar hora al horario de España (sumar 1 hora)
+                        if (time) {
+                            const [hours, minutes] = time.split(':').map(Number);
+                            let newHours = hours + 1;
+                            if (newHours >= 24) newHours -= 24;
+                            time = `${String(newHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                        }
 
                         let event = '';
                         if (time) {
-                            event = blockText.split(time)[1].split(/\(CH-\d+\)/)[0].trim();
+                            event = blockText.split(timeMatch[0])[1].split(/\(CH-\d+\)/)[0].trim();
                         } else {
                             event = blockText.split(/\(CH-\d+\)/)[0].trim();
                         }
@@ -1287,7 +1295,7 @@
                     filtered = filtered.filter(channel => {
                         if (!channel.time) return false;
                         
-                        // Parsear hora del evento (formato HH:MM)
+                        // Parsear hora del evento (formato HH:MM) ya ajustada a España
                         const [hours, minutes] = channel.time.split(':').map(Number);
                         const eventTime = new Date();
                         eventTime.setHours(hours, minutes, 0, 0);
