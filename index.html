@@ -358,6 +358,10 @@
             background: linear-gradient(135deg, #9b59b6, #8e44ad);
         }
         
+        .tv-control-yellow {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+        
         /* FAVORITOS */
         .favoritos-container {
             margin-top: 20px;
@@ -459,6 +463,50 @@
             font-size: 14px;
         }
         
+        /* CHANNEL LIST IN TV MODE */
+        .channel-list-container {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 100vh;
+            background-color: rgba(0,0,0,0.9);
+            z-index: 1002;
+            overflow-y: auto;
+            padding: 20px;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .channel-list-container.show {
+            transform: translateX(0);
+        }
+        
+        .channel-list-title {
+            color: white;
+            font-size: 18px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .channel-list-item {
+            padding: 10px;
+            color: white;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .channel-list-item:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        
+        .channel-list-number {
+            color: var(--secondary-color);
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        
         @keyframes tvTurnOn {
             0% {
                 opacity: 0;
@@ -532,9 +580,15 @@
         <div class="player-controls">
             <button class="tv-control-button tv-control-green" id="botonGuardarReproductor" onclick="mostrarModalFavorito()" title="Guardar en favoritos">+</button>
             <button class="tv-control-button tv-control-blue" id="botonRefrescarReproductor" onclick="refrescarReproductor()" title="Refrescar">↻</button>
+            <button class="tv-control-button tv-control-yellow" id="botonListaCanales" onclick="mostrarListaCanales()" title="Lista de canales">≡</button>
             <button class="tv-control-button tv-control-purple" id="botonPantallaCompleta" onclick="entrarPantallaCompleta()" title="Pantalla completa">⤢</button>
             <button class="tv-control-button tv-control-red" id="botonCerrarReproductor" onclick="cerrarReproductor()" title="Cerrar">×</button>
         </div>
+    </div>
+
+    <div class="channel-list-container" id="channelListContainer">
+        <div class="channel-list-title">Lista de Canales</div>
+        <div id="channelListContent"></div>
     </div>
 
     <div class="modal-favorito" id="modalFavorito">
@@ -601,6 +655,7 @@
         <div class="channel-info" id="fullscreenChannelInfo">Canal: -</div>
         <button class="channel-nav-btn" id="nextChannelBtn" title="Siguiente canal">►</button>
         <button class="fullscreen-btn" id="exitFullscreenBtn" title="Salir de pantalla completa">⤢</button>
+        <button class="fullscreen-btn" id="fullscreenListBtn" title="Lista de canales" onclick="mostrarListaCanales()">≡</button>
     </div>
 
     <script>
@@ -666,6 +721,10 @@
             const fullscreenChannelInfo = document.getElementById('fullscreenChannelInfo');
             const tvChannelDisplay = document.getElementById('tvChannelDisplay');
             const botonPantallaCompleta = document.getElementById('botonPantallaCompleta');
+            const botonListaCanales = document.getElementById('botonListaCanales');
+            const channelListContainer = document.getElementById('channelListContainer');
+            const channelListContent = document.getElementById('channelListContent');
+            const fullscreenListBtn = document.getElementById('fullscreenListBtn');
             
             let allChannels = [];
             let currentChannel = null;
@@ -684,6 +743,31 @@
             updateTvDisplay();
             
             exportFavoritesBtn.addEventListener('click', exportFavorites);
+            
+            window.mostrarListaCanales = function() {
+                if (!allChannels.length) return;
+                
+                channelListContent.innerHTML = '';
+                
+                allChannels.forEach(channel => {
+                    const item = document.createElement('div');
+                    item.className = 'channel-list-item';
+                    item.innerHTML = `<span class="channel-list-number">CH-${channel.number}</span>${channel.name}`;
+                    
+                    item.addEventListener('click', function() {
+                        let url = channel.url;
+                        if (s2Toggle.checked) {
+                            url = `https://stream2wetch.top/embed/stream-${channel.number}.php`;
+                        }
+                        reproducirCanal(url, channel.name, channel.number);
+                        channelListContainer.classList.remove('show');
+                    });
+                    
+                    channelListContent.appendChild(item);
+                });
+                
+                channelListContainer.classList.toggle('show');
+            }
             
             playDirectChannelBtn.addEventListener('click', function() {
                 const channelNumber = directChannelInput.value.trim();
@@ -965,6 +1049,7 @@
                 currentChannel = null;
                 mainContainer.classList.remove('with-player');
                 fullscreenControls.classList.remove('show');
+                channelListContainer.classList.remove('show');
             }
             
             function updateChannelCounter(count) {
