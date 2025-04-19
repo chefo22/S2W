@@ -69,6 +69,7 @@
         .switch-text {
             font-weight: 600;
             color: var(--primary-color);
+            cursor: pointer;
         }
         
         .switch {
@@ -663,15 +664,11 @@
             <div id="channelCounter" class="channel-counter">Canales detectados: 0</div>
             
             <div class="switch-container">
-                <span class="switch-text">S2Wetch</span>
-                <label class="switch">
-                    <input type="checkbox" id="s2Toggle" checked>
-                    <span class="slider"></span>
-                </label>
+                <span class="switch-text" id="s2ToggleText"></span>
             </div>
             
             <div class="tv-controls">
-                <div class="tv-channel-display" id="tvChannelDisplay">S2Wetch: OFF</div>
+                <div class="tv-channel-display" id="tvChannelDisplay"></div>
                 <div class="tv-buttons">
                     <button id="fetchBtn" class="tv-button">
                         <span>Cargar Canales</span>
@@ -771,7 +768,7 @@
             const favoritosList = document.getElementById('favoritosList');
             const modalFavorito = document.getElementById('modalFavorito');
             const nombreFavoritoInput = document.getElementById('nombreFavorito');
-            const s2Toggle = document.getElementById('s2Toggle');
+            const s2ToggleText = document.getElementById('s2ToggleText');
             const directChannelInput = document.getElementById('directChannelInput');
             const playDirectChannelBtn = document.getElementById('playDirectChannel');
             const exportFavoritesBtn = document.getElementById('exportFavoritesBtn');
@@ -797,17 +794,45 @@
             let alturaReproductor = localStorage.getItem('alturaReproductor') || '350px';
             let favoritos = JSON.parse(localStorage.getItem('canalesFavoritos')) || [];
             let currentFilter = 'all';
+            let s2Toggle = true;
             
             if (favoritos.length > 0) {
                 mostrarFavoritos();
             }
             
             function updateTvDisplay() {
-                const mode = s2Toggle.checked ? 'S2Wetch: ON' : 'DaddyLive: ON';
-                tvChannelDisplay.textContent = mode;
+                const mode = s2Toggle ? 'S2Wetch: ON' : 'DaddyLive: ON';
+                tvChannelDisplay.textContent = '';
+                s2ToggleText.textContent = '';
             }
             
             updateTvDisplay();
+            
+            s2ToggleText.addEventListener('click', function() {
+                s2Toggle = !s2Toggle;
+                updateTvDisplay();
+                
+                if (currentChannel) {
+                    let newUrl, newName;
+                    const baseName = currentChannel.name.replace(/\(S2Wetch\)|\(DaddyLive\)/g, '').trim();
+                    
+                    if (s2Toggle) {
+                        newUrl = `https://stream2wetch.top/embed/stream-${currentChannel.number}.php`;
+                        newName = `${baseName} (S2Wetch)`;
+                    } else {
+                        newUrl = `https://daddylivehd1.click/channel-${currentChannel.number}`;
+                        newName = `${baseName} (DaddyLive)`;
+                    }
+                    
+                    currentChannel.url = newUrl;
+                    currentChannel.name = newName;
+                    videoFrame.src = newUrl;
+                    
+                    if (fullscreenControls.classList.contains('show')) {
+                        fullscreenChannelInfo.textContent = `${newName} (CH-${currentChannel.number})`;
+                    }
+                }
+            });
             
             exportFavoritesBtn.addEventListener('click', exportFavorites);
             
@@ -856,7 +881,7 @@
                         
                         item.addEventListener('click', function() {
                             let url = channel.url;
-                            if (s2Toggle.checked) {
+                            if (s2Toggle) {
                                 url = `https://stream2wetch.top/embed/stream-${channel.number}.php`;
                             }
                             reproducirCanal(url, channel.name, channel.number);
@@ -888,7 +913,7 @@
                 }
                 
                 let url, nombre;
-                if (s2Toggle.checked) {
+                if (s2Toggle) {
                     url = `https://stream2wetch.top/embed/stream-${channelNumber}.php`;
                     nombre = `Canal ${channelNumber} (S2Wetch)`;
                 } else {
@@ -902,31 +927,6 @@
             directChannelInput.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     playDirectChannelBtn.click();
-                }
-            });
-            
-            s2Toggle.addEventListener('change', function() {
-                updateTvDisplay();
-                
-                if (currentChannel) {
-                    let newUrl, newName;
-                    const baseName = currentChannel.name.replace(/\(S2Wetch\)|\(DaddyLive\)/g, '').trim();
-                    
-                    if (s2Toggle.checked) {
-                        newUrl = `https://stream2wetch.top/embed/stream-${currentChannel.number}.php`;
-                        newName = `${baseName} (S2Wetch)`;
-                    } else {
-                        newUrl = `https://daddylivehd1.click/channel-${currentChannel.number}`;
-                        newName = `${baseName} (DaddyLive)`;
-                    }
-                    
-                    currentChannel.url = newUrl;
-                    currentChannel.name = newName;
-                    videoFrame.src = newUrl;
-                    
-                    if (fullscreenControls.classList.contains('show')) {
-                        fullscreenChannelInfo.textContent = `${newName} (CH-${currentChannel.number})`;
-                    }
                 }
             });
             
@@ -990,7 +990,7 @@
                 fullscreenControls.classList.add('show');
                 
                 let displayName = currentChannel.name;
-                if (s2Toggle.checked) {
+                if (s2Toggle) {
                     displayName = currentChannel.name.replace('(DaddyLive)', '(S2Wetch)');
                 } else {
                     displayName = currentChannel.name.replace('(S2Wetch)', '(DaddyLive)');
@@ -1035,7 +1035,7 @@
                     let url = prevChannel.url;
                     let name = prevChannel.name;
                     
-                    if (s2Toggle.checked) {
+                    if (s2Toggle) {
                         url = `https://stream2wetch.top/embed/stream-${prevChannel.number}.php`;
                         name = prevChannel.name.replace('(DaddyLive)', '(S2Wetch)');
                     } else {
@@ -1058,7 +1058,7 @@
                     let url = nextChannel.url;
                     let name = nextChannel.name;
                     
-                    if (s2Toggle.checked) {
+                    if (s2Toggle) {
                         url = `https://stream2wetch.top/embed/stream-${nextChannel.number}.php`;
                         name = nextChannel.name.replace('(DaddyLive)', '(S2Wetch)');
                     } else {
@@ -1098,7 +1098,7 @@
                     
                     btn.addEventListener('click', function() {
                         let url = fav.url;
-                        if (s2Toggle.checked) {
+                        if (s2Toggle) {
                             url = `https://stream2wetch.top/embed/stream-${fav.number}.php`;
                         }
                         reproducirCanal(url, fav.name, fav.number);
@@ -1139,7 +1139,7 @@
                 
                 if (fullscreenControls.classList.contains('show')) {
                     let displayName = nombre;
-                    if (s2Toggle.checked) {
+                    if (s2Toggle) {
                         displayName = nombre.replace('(DaddyLive)', '(S2Wetch)');
                     } else {
                         displayName = nombre.replace('(S2Wetch)', '(DaddyLive)');
@@ -1266,7 +1266,7 @@
                     
                     btn.addEventListener('click', function() {
                         let url = channel.url;
-                        if (s2Toggle.checked) {
+                        if (s2Toggle) {
                             url = `https://stream2wetch.top/embed/stream-${channel.number}.php`;
                         }
                         reproducirCanal(url, channel.name, channel.number);
