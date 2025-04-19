@@ -14,160 +14,76 @@
             --dark-color: #2c3e50;
             --text-color: #333;
             --text-light: #7f8c8d;
-            --shadow: 0 4px 6px rgba(0,0,0,0.1);
-            --transition: all 0.3s ease;
-            --tv-bezel: #1a1a1a;
-            --tv-screen: #000;
-            --tv-controls: #333;
+            --shadow: 0 2px 4px rgba(0,0,0,0.1);
+            --transition: all 0.2s ease;
+        }
+        
+        * {
+            box-sizing: border-box;
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #222;
+            background-color: #f5f5f5;
             color: var(--text-color);
-            line-height: 1.6;
+            line-height: 1.5;
+            font-size: 15px;
         }
         
-        /* Diseño tipo TV */
         .tv-container {
-            max-width: 1000px;
-            margin: 20px auto;
-            padding: 20px;
-            position: relative;
+            width: 100%;
+            padding: 10px;
+            margin: 0 auto;
         }
         
-        .tv-screen {
-            background-color: var(--tv-screen);
-            border-radius: 5px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-        
-        .tv-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: var(--tv-controls);
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-        }
-        
-        .tv-channel-display {
-            background-color: #000;
-            color: #0f0;
-            font-family: 'Courier New', monospace;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            min-width: 120px;
-            text-align: center;
-        }
-        
-        .tv-buttons {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .tv-button {
-            background-color: #444;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 5px 10px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: var(--transition);
-        }
-        
-        .tv-button:hover {
-            background-color: #555;
-        }
-        
-        .tv-button-primary {
-            background-color: var(--secondary-color);
-        }
-        
-        .tv-button-primary:hover {
-            background-color: #2980b9;
-        }
-        
-        .tv-button-accent {
-            background-color: var(--accent-color);
-        }
-        
-        .tv-button-accent:hover {
-            background-color: #c0392b;
-        }
-        
-        /* Contenido TV */
         .container {
             background-color: white;
             padding: 15px;
-            border-radius: 5px;
-            position: relative;
-        }
-        
-        .container.with-player {
-            margin-top: 400px;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            margin-bottom: 15px;
         }
         
         .channel-counter {
-            position: absolute;
-            top: 15px;
-            left: 20px;
-            font-size: 0.9rem;
+            display: block;
+            text-align: center;
+            font-size: 14px;
             color: var(--success-color);
             font-weight: bold;
+            margin-bottom: 15px;
+            padding: 5px;
             background-color: rgba(39, 174, 96, 0.1);
-            padding: 5px 10px;
             border-radius: 15px;
-            display: inline-block;
-        }
-        
-        .controls {
-            margin: 50px 0 15px;
-            text-align: center;
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            align-items: center;
         }
         
         .switch-container {
-            position: absolute;
-            top: 15px;
-            right: 20px;
             display: flex;
+            justify-content: center;
             align-items: center;
-            gap: 8px;
-            background-color: rgba(155, 89, 182, 0.2);
-            padding: 5px 10px;
-            border-radius: 15px;
+            gap: 10px;
+            margin-bottom: 15px;
         }
-
+        
         .switch-text {
             font-weight: 600;
-            color: #9b59b6;
-            font-size: 0.85rem;
+            color: var(--primary-color);
         }
-
+        
         .switch {
             position: relative;
             display: inline-block;
-            width: 45px;
-            height: 24px;
+            width: 50px;
+            height: 26px;
         }
-
+        
         .switch input {
             opacity: 0;
             width: 0;
             height: 0;
         }
-
+        
         .slider {
             position: absolute;
             cursor: pointer;
@@ -177,163 +93,110 @@
             bottom: 0;
             background-color: #ccc;
             transition: .4s;
-            border-radius: 24px;
+            border-radius: 26px;
         }
-
+        
         .slider:before {
             position: absolute;
             content: "";
-            height: 18px;
-            width: 18px;
+            height: 20px;
+            width: 20px;
             left: 3px;
             bottom: 3px;
             background-color: white;
             transition: .4s;
             border-radius: 50%;
         }
-
+        
         input:checked + .slider {
-            background-color: #9b59b6;
+            background-color: var(--secondary-color);
         }
-
+        
         input:checked + .slider:before {
-            transform: translateX(21px);
+            transform: translateX(24px);
         }
         
-        /* Resto de estilos... */
-        .search-box {
-            margin: 15px auto;
+        .tv-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .tv-channel-display {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
             text-align: center;
-            position: relative;
-            max-width: 250px;
+            font-size: 14px;
         }
         
-        #searchInput {
-            padding: 6px 10px 6px 28px;
-            width: 100%;
-            border: 1px solid #ddd;
-            border-radius: 15px;
-            font-size: 0.85rem;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        .tv-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .tv-button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            background-color: var(--secondary-color);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
             transition: var(--transition);
         }
         
-        #searchInput:focus {
-            outline: none;
-            border-color: var(--secondary-color);
-            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+        .tv-button:hover {
+            opacity: 0.9;
+        }
+        
+        .tv-button-accent {
+            background-color: var(--accent-color);
+        }
+        
+        .direct-channel-input {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .direct-channel-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+        
+        .search-box {
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        #searchInput {
+            width: 100%;
+            padding: 10px 15px 10px 35px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 15px;
         }
         
         .search-box::before {
             content: "🔍";
             position: absolute;
-            left: 10px;
+            left: 12px;
             top: 50%;
             transform: translateY(-50%);
-            font-size: 0.85rem;
             color: var(--text-light);
-        }
-        
-        .channel-item {
-            display: flex;
-            align-items: stretch;
-            margin: 8px 0;
-            gap: 8px;
-            transition: var(--transition);
-        }
-        
-        .channel-time {
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
-            color: var(--accent-color);
-            min-width: 50px;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: rgba(231, 76, 60, 0.1);
-            border-radius: 5px;
-            padding: 0 5px;
-            font-size: 0.8rem;
-        }
-        
-        .channel-btn {
-            padding: 8px 12px;
-            background-color: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            font-size: 0.85rem;
-            width: 100%;
-            gap: 3px;
-            box-shadow: var(--shadow);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .channel-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 3px;
-            height: 100%;
-            background-color: var(--secondary-color);
-            transition: var(--transition);
-        }
-        
-        .channel-btn:hover {
-            transform: translateX(3px);
-            border-color: var(--secondary-color);
-            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
-        }
-        
-        .channel-btn:hover::before {
-            width: 4px;
-            background-color: var(--accent-color);
-        }
-        
-        .channel-name-container {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            width: 100%;
-        }
-        
-        .channel-name {
-            font-weight: 600;
-            color: var(--primary-color);
-            font-size: 0.9rem;
-            flex-grow: 1;
-        }
-        
-        .channel-event {
-            font-size: 0.75rem;
-            color: var(--text-light);
-            margin-top: 2px;
-            width: 100%;
-            line-height: 1.3;
-        }
-        
-        .channel-number {
-            color: var(--secondary-color);
-            font-family: monospace;
-            font-size: 0.75rem;
-            font-weight: bold;
-            background-color: rgba(52, 152, 219, 0.1);
-            padding: 1px 5px;
-            border-radius: 8px;
         }
         
         .loading {
             text-align: center;
             padding: 20px;
             display: none;
-            font-size: 0.9rem;
         }
         
         .loading::after {
@@ -344,7 +207,7 @@
             border: 2px solid rgba(52, 152, 219, 0.3);
             border-radius: 50%;
             border-top-color: var(--secondary-color);
-            animation: spin 1s ease-in-out infinite;
+            animation: spin 1s linear infinite;
             margin-left: 8px;
         }
         
@@ -352,7 +215,62 @@
             to { transform: rotate(360deg); }
         }
         
-        /* REPRODUCTOR TV */
+        .channel-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 8px;
+        }
+        
+        .channel-time {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: var(--accent-color);
+            min-width: 50px;
+            text-align: center;
+            font-size: 14px;
+            background-color: rgba(231, 76, 60, 0.1);
+            padding: 5px;
+            border-radius: 5px;
+        }
+        
+        .channel-btn {
+            flex: 1;
+            padding: 12px 15px;
+            background-color: white;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            text-align: left;
+            transition: var(--transition);
+        }
+        
+        .channel-btn:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .channel-name-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .channel-name {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .channel-number {
+            color: var(--secondary-color);
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .channel-event {
+            color: var(--text-light);
+            font-size: 13px;
+        }
+        
+        /* REPRODUCTOR (ESTILO ORIGINAL) */
         .reproductor-container {
             position: fixed;
             top: 0;
@@ -362,6 +280,7 @@
             flex-direction: column;
             z-index: 100;
             background-color: #000;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
         }
 
         .reproductor-container.mostrar {
@@ -382,6 +301,7 @@
             min-height: 300px;
             max-height: 80vh;
             border: none;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
         }
         
         .reproductor iframe {
@@ -393,129 +313,61 @@
         .player-controls {
             display: flex;
             justify-content: center;
-            gap: 8px;
-            background-color: rgba(0,0,0,0.9);
-            padding: 10px;
+            gap: 15px;
+            background-color: rgba(0,0,0,0.95);
+            padding: 15px;
             width: 100%;
+            border-top: 1px solid rgba(255,255,255,0.1);
         }
         
         .tv-control-button {
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             padding: 0;
             border: none;
             border-radius: 50%;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.4);
             color: white;
             margin: 0 5px;
         }
         
         .tv-control-button:hover {
-            transform: scale(1.1);
+            transform: scale(1.15);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
         }
         
         .tv-control-red {
-            background-color: #e74c3c;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
         }
         
         .tv-control-green {
-            background-color: #2ecc71;
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
         }
         
         .tv-control-blue {
-            background-color: #3498db;
+            background: linear-gradient(135deg, #3498db, #2980b9);
         }
         
         .tv-control-purple {
-            background-color: #9b59b6;
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
         }
         
-        /* Controles pantalla completa */
-        .player-fullscreen-controls {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(0, 0, 0, 0.7);
-            padding: 10px 15px;
-            border-radius: 30px;
-            z-index: 1001;
-            gap: 10px;
-            align-items: center;
-        }
-        
-        .player-fullscreen-controls.show {
-            display: flex;
-        }
-        
-        .fullscreen-btn {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            font-size: 18px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-        
-        .channel-nav-btn {
-            background-color: #2c3e50;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            font-size: 18px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-        
-        .channel-nav-btn:hover {
-            background-color: #1a252f;
-            transform: scale(1.1);
-        }
-        
-        .channel-nav-btn:disabled {
-            background-color: #95a5a6;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .channel-info {
-            color: white;
-            font-size: 14px;
-            margin: 0 15px;
-            min-width: 150px;
-            text-align: center;
-        }
-        
-        /* Favoritos */
+        /* FAVORITOS */
         .favoritos-container {
             margin-top: 20px;
-            background-color: rgba(52, 152, 219, 0.05);
             padding: 15px;
+            background-color: rgba(52, 152, 219, 0.05);
             border-radius: 8px;
-            border-left: 3px solid var(--secondary-color);
         }
         
         .favoritos-title {
-            font-size: 1.1rem;
-            font-weight: bold;
+            font-weight: 600;
             color: var(--primary-color);
             margin-bottom: 10px;
             display: flex;
@@ -526,46 +378,87 @@
         .favoritos-title::before {
             content: "★";
             color: #f1c40f;
-            font-size: 1.2rem;
         }
         
-        /* Modal */
+        /* MODAL */
         .modal-favorito {
-            display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             background-color: rgba(0,0,0,0.5);
-            z-index: 2000;
+            display: none;
             justify-content: center;
             align-items: center;
-            backdrop-filter: blur(4px);
+            z-index: 2000;
         }
         
         .modal-contenido {
             background-color: white;
             padding: 20px;
-            border-radius: 8px;
-            width: 300px;
-            max-width: 90%;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
-            animation: modalFadeIn 0.3s ease-out;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 350px;
         }
         
-        @keyframes modalFadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-15px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .modal-contenido h3 {
+            margin-top: 0;
         }
         
-        /* Animaciones TV */
+        .modal-contenido input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .modal-contenido button {
+            padding: 8px 15px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        /* FULLSCREEN CONTROLS */
+        .player-fullscreen-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0,0,0,0.7);
+            padding: 10px 15px;
+            border-radius: 30px;
+            display: none;
+            gap: 10px;
+            align-items: center;
+            z-index: 1001;
+        }
+        
+        .player-fullscreen-controls.show {
+            display: flex;
+        }
+        
+        .channel-nav-btn, .fullscreen-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        .channel-info {
+            color: white;
+            min-width: 120px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
         @keyframes tvTurnOn {
             0% {
                 opacity: 0;
@@ -614,75 +507,19 @@
                 transform: scale(0.8) translateY(-20px);
             }
         }
-        
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(5px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .channel-item {
-            animation: fadeIn 0.3s ease-out forwards;
-            opacity: 0;
-        }
-        
-        .channel-item:nth-child(1) { animation-delay: 0.1s; }
-        .channel-item:nth-child(2) { animation-delay: 0.2s; }
-        .channel-item:nth-child(3) { animation-delay: 0.3s; }
-        .channel-item:nth-child(4) { animation-delay: 0.4s; }
-        .channel-item:nth-child(5) { animation-delay: 0.5s; }
-        .channel-item:nth-child(n+6) { animation-delay: 0.6s; }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
+
+        @media (min-width: 768px) {
             .tv-container {
-                padding: 10px;
-                margin: 10px;
+                max-width: 600px;
             }
             
-            .container.with-player {
-                margin-top: 250px;
+            .tv-controls {
+                flex-direction: row;
+                align-items: center;
             }
             
-            .channel-counter {
-                position: static;
-                margin: 0 auto 8px;
-                display: block;
-                text-align: center;
-            }
-            
-            .switch-container {
-                position: static;
-                justify-content: center;
-                margin: 8px 0;
-            }
-            
-            .controls {
-                margin: 12px 0;
-                flex-direction: column;
-                gap: 8px;
-            }
-            
-            .reproductor {
-                height: 200px;
-            }
-            
-            .player-fullscreen-controls {
-                padding: 8px 12px;
-                gap: 6px;
-                bottom: 10px;
-            }
-            
-            .channel-nav-btn,
-            .fullscreen-btn {
-                width: 36px;
-                height: 36px;
-                font-size: 16px;
+            .tv-buttons {
+                flex: 1;
             }
         }
     </style>
@@ -705,59 +542,57 @@
             <h3>Guardar como favorito</h3>
             <input type="text" id="nombreFavorito" placeholder="Nombre personalizado">
             <div>
-                <button class="tv-button tv-button-primary" onclick="guardarFavoritoConNombre()">Guardar</button>
-                <button class="tv-button" onclick="cerrarModalFavorito()">Cancelar</button>
+                <button class="tv-button" onclick="guardarFavoritoConNombre()">Guardar</button>
+                <button class="tv-button tv-button-accent" onclick="cerrarModalFavorito()">Cancelar</button>
             </div>
         </div>
     </div>
 
     <div class="tv-container">
-        <div class="tv-screen">
-            <div class="container" id="mainContainer">
-                <div id="channelCounter" class="channel-counter">Canales detectados: 0</div>
-                
-                <div class="switch-container">
-                    <span class="switch-text">S2Wetch</span>
-                    <label class="switch">
-                        <input type="checkbox" id="s2Toggle" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                
-                <div class="tv-controls">
-                    <div class="tv-channel-display" id="tvChannelDisplay">S2Wetch: OFF</div>
-                    <div class="tv-buttons">
-                        <button id="fetchBtn" class="tv-button tv-button-primary">
-                            <span>Cargar Canales</span>
-                        </button>
-                        <button id="exportFavoritesBtn" class="tv-button">
-                            <span>Exportar Favoritos</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="direct-channel-input">
-                    <input type="number" id="directChannelInput" placeholder="N° Canal" min="1">
-                    <button id="playDirectChannel" class="tv-button tv-button-accent">
-                        <span>Reproducir</span>
+        <div class="container" id="mainContainer">
+            <div id="channelCounter" class="channel-counter">Canales detectados: 0</div>
+            
+            <div class="switch-container">
+                <span class="switch-text">S2Wetch</span>
+                <label class="switch">
+                    <input type="checkbox" id="s2Toggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="tv-controls">
+                <div class="tv-channel-display" id="tvChannelDisplay">S2Wetch: OFF</div>
+                <div class="tv-buttons">
+                    <button id="fetchBtn" class="tv-button">
+                        <span>Cargar Canales</span>
+                    </button>
+                    <button id="exportFavoritesBtn" class="tv-button tv-button-accent">
+                        <span>Exportar Favoritos</span>
                     </button>
                 </div>
-                
-                <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="Buscar canales...">
-                </div>
-                
-                <div id="loading" class="loading">
-                    Cargando canales desde DaddyLive, por favor espera...
-                </div>
-                
-                <div class="favoritos-container" id="favoritosContainer" style="display: none;">
-                    <div class="favoritos-title">Tus Canales Favoritos</div>
-                    <div id="favoritosList"></div>
-                </div>
-                
-                <div id="channelsContainer"></div>
             </div>
+            
+            <div class="direct-channel-input">
+                <input type="number" id="directChannelInput" placeholder="N° Canal" min="1">
+                <button id="playDirectChannel" class="tv-button tv-button-accent">
+                    <span>Reproducir</span>
+                </button>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Buscar canales...">
+            </div>
+            
+            <div id="loading" class="loading">
+                Cargando canales desde DaddyLive, por favor espera...
+            </div>
+            
+            <div class="favoritos-container" id="favoritosContainer" style="display: none;">
+                <div class="favoritos-title">Tus Canales Favoritos</div>
+                <div id="favoritosList"></div>
+            </div>
+            
+            <div id="channelsContainer"></div>
         </div>
     </div>
 
@@ -841,19 +676,15 @@
                 mostrarFavoritos();
             }
             
-            // Actualizar display de TV
             function updateTvDisplay() {
                 const mode = s2Toggle.checked ? 'S2Wetch: ON' : 'DaddyLive: ON';
                 tvChannelDisplay.textContent = mode;
             }
             
-            // Inicializar display
             updateTvDisplay();
             
-            // Configurar el botón de exportación
             exportFavoritesBtn.addEventListener('click', exportFavorites);
             
-            // Función para reproducir canal directo
             playDirectChannelBtn.addEventListener('click', function() {
                 const channelNumber = directChannelInput.value.trim();
                 if (!channelNumber) {
@@ -873,14 +704,12 @@
                 reproducirCanal(url, nombre, channelNumber);
             });
             
-            // Permitir reproducir con Enter
             directChannelInput.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     playDirectChannelBtn.click();
                 }
             });
             
-            // Actualizar reproductor cuando cambia el interruptor S2Wetch
             s2Toggle.addEventListener('change', function() {
                 updateTvDisplay();
                 
@@ -900,7 +729,6 @@
                     currentChannel.name = newName;
                     videoFrame.src = newUrl;
                     
-                    // Actualizar info en controles de pantalla completa si están visibles
                     if (fullscreenControls.classList.contains('show')) {
                         fullscreenChannelInfo.textContent = `${newName} (CH-${currentChannel.number})`;
                     }
@@ -951,7 +779,6 @@
                 }
             }
             
-            // Función para entrar en pantalla completa
             window.entrarPantallaCompleta = function() {
                 if (!currentChannel) return;
                 
@@ -961,14 +788,12 @@
                 reproductorContainer.style.width = '100vw';
                 reproductorContainer.style.height = '100vh';
                 reproductorContainer.style.zIndex = '1000';
-                reproductor.style.height = '100%';
+                reproductor.style.height = 'calc(100vh - 60px)';
                 reproductor.style.maxHeight = 'none';
                 
-                // Ocultar controles normales y mostrar controles de pantalla completa
                 document.querySelector('.player-controls').style.display = 'none';
                 fullscreenControls.classList.add('show');
                 
-                // Actualizar la información del canal según el modo S2Wetch
                 let displayName = currentChannel.name;
                 if (s2Toggle.checked) {
                     displayName = currentChannel.name.replace('(DaddyLive)', '(S2Wetch)');
@@ -977,11 +802,9 @@
                 }
                 fullscreenChannelInfo.textContent = `${displayName} (CH-${currentChannel.number})`;
                 
-                // Actualizar estado de botones de navegación
                 updateNavButtons();
             }
             
-            // Función para salir de pantalla completa
             function salirPantallaCompleta() {
                 reproductorContainer.style.position = '';
                 reproductorContainer.style.top = '';
@@ -992,12 +815,10 @@
                 reproductor.style.height = alturaReproductor;
                 reproductor.style.maxHeight = '80vh';
                 
-                // Mostrar controles normales y ocultar controles de pantalla completa
                 document.querySelector('.player-controls').style.display = 'flex';
                 fullscreenControls.classList.remove('show');
             }
             
-            // Función para actualizar estado de botones de navegación
             function updateNavButtons() {
                 if (!allChannels.length) {
                     prevChannelBtn.disabled = true;
@@ -1010,7 +831,6 @@
                 nextChannelBtn.disabled = currentIndex >= allChannels.length - 1;
             }
             
-            // Navegar al canal anterior
             prevChannelBtn.addEventListener('click', function() {
                 if (!allChannels.length || !currentChannel) return;
                 
@@ -1034,7 +854,6 @@
                 }
             });
             
-            // Navegar al siguiente canal
             nextChannelBtn.addEventListener('click', function() {
                 if (!allChannels.length || !currentChannel) return;
                 
@@ -1058,7 +877,6 @@
                 }
             });
             
-            // Salir de pantalla completa
             exitFullscreenBtn.addEventListener('click', salirPantallaCompleta);
             
             function mostrarFavoritos() {
@@ -1122,10 +940,8 @@
                 reproductorContainer.classList.add('mostrar');
                 reproductor.style.height = alturaReproductor;
                 
-                // Añadir clase para mover el contenido hacia abajo
                 mainContainer.classList.add('with-player');
                 
-                // Actualizar info en controles de pantalla completa si están visibles
                 if (fullscreenControls.classList.contains('show')) {
                     let displayName = nombre;
                     if (s2Toggle.checked) {
@@ -1144,19 +960,11 @@
             }
             
             window.cerrarReproductor = function() {
-                reproductorContainer.classList.add('ocultar');
-                
-                // Quitar clase para volver el contenido a su posición original
+                reproductorContainer.classList.remove('mostrar');
+                videoFrame.src = '';
+                currentChannel = null;
                 mainContainer.classList.remove('with-player');
-                
-                // Ocultar controles de pantalla completa si están visibles
                 fullscreenControls.classList.remove('show');
-                
-                setTimeout(() => {
-                    reproductorContainer.classList.remove('mostrar', 'ocultar');
-                    videoFrame.src = '';
-                    currentChannel = null;
-                }, 500);
             }
             
             function updateChannelCounter(count) {
