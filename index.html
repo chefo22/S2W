@@ -193,6 +193,29 @@
             color: var(--text-light);
         }
         
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .filter-button {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            background-color: white;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 14px;
+        }
+        
+        .filter-button.active {
+            background-color: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+        
         .loading {
             text-align: center;
             padding: 20px;
@@ -595,6 +618,10 @@
             .tv-buttons {
                 flex: 1;
             }
+            
+            .filter-buttons {
+                flex-direction: row;
+            }
         }
     </style>
 </head>
@@ -664,6 +691,12 @@
             
             <div class="search-box">
                 <input type="text" id="searchInput" placeholder="Buscar canales...">
+            </div>
+            
+            <div class="filter-buttons">
+                <button class="filter-button active" id="filterAll">Todos</button>
+                <button class="filter-button" id="filterLive">En Vivo</button>
+                <button class="filter-button" id="filterSports">Deportes</button>
             </div>
             
             <div id="loading" class="loading">
@@ -755,11 +788,15 @@
             const channelListContent = document.getElementById('channelListContent');
             const fullscreenListBtn = document.getElementById('fullscreenListBtn');
             const channelListSearch = document.getElementById('channelListSearch');
+            const filterAll = document.getElementById('filterAll');
+            const filterLive = document.getElementById('filterLive');
+            const filterSports = document.getElementById('filterSports');
             
             let allChannels = [];
             let currentChannel = null;
             let alturaReproductor = localStorage.getItem('alturaReproductor') || '350px';
             let favoritos = JSON.parse(localStorage.getItem('canalesFavoritos')) || [];
+            let currentFilter = 'all';
             
             if (favoritos.length > 0) {
                 mostrarFavoritos();
@@ -773,6 +810,30 @@
             updateTvDisplay();
             
             exportFavoritesBtn.addEventListener('click', exportFavorites);
+            
+            filterAll.addEventListener('click', function() {
+                currentFilter = 'all';
+                filterAll.classList.add('active');
+                filterLive.classList.remove('active');
+                filterSports.classList.remove('active');
+                filterChannels();
+            });
+            
+            filterLive.addEventListener('click', function() {
+                currentFilter = 'live';
+                filterAll.classList.remove('active');
+                filterLive.classList.add('active');
+                filterSports.classList.remove('active');
+                filterChannels();
+            });
+            
+            filterSports.addEventListener('click', function() {
+                currentFilter = 'sports';
+                filterAll.classList.remove('active');
+                filterLive.classList.remove('active');
+                filterSports.classList.add('active');
+                filterChannels();
+            });
             
             window.mostrarListaCanales = function() {
                 if (!allChannels.length) return;
@@ -1210,17 +1271,42 @@
             
             function filterChannels() {
                 const searchTerm = searchInput.value.toLowerCase();
-                if (!searchTerm) {
-                    displayChannels(allChannels);
-                    return;
+                let filtered = allChannels;
+                
+                if (searchTerm) {
+                    filtered = filtered.filter(channel => {
+                        const cleanName = channel.rawText.toLowerCase();
+                        return cleanName.includes(searchTerm) || 
+                               channel.number.includes(searchTerm) ||
+                               (channel.time && channel.time.includes(searchTerm));
+                    });
                 }
                 
-                const filtered = allChannels.filter(channel => {
-                    const cleanName = channel.rawText.toLowerCase();
-                    return cleanName.includes(searchTerm) || 
-                           channel.number.includes(searchTerm) ||
-                           (channel.time && channel.time.includes(searchTerm));
-                });
+                if (currentFilter === 'live') {
+                    const now = new Date();
+                    filtered = filtered.filter(channel => {
+                        if (!channel.time) return false;
+                        
+                        // Parsear hora del evento (formato HH:MM)
+                        const [hours, minutes] = channel.time.split(':').map(Number);
+                        const eventTime = new Date();
+                        eventTime.setHours(hours, minutes, 0, 0);
+                        
+                        // Calcular diferencia en minutos
+                        const diffMinutes = (now - eventTime) / (1000 * 60);
+                        
+                        // Mostrar si empezó hace menos de 2 horas (120 minutos)
+                        // O si empieza en menos de 30 minutos (eventos futuros)
+                        return diffMinutes >= -30 && diffMinutes <= 120;
+                    });
+                } else if (currentFilter === 'sports') {
+                    filtered = filtered.filter(channel => {
+                        const sportsKeywords = ['fútbol', 'futbol', 'football', 'baloncesto', 'basketball', 'tenis', 'deporte', 'deportes', 'liga', 'champions', 'uefa', 'nba', 'mlb', 'nfl'];
+                        return sportsKeywords.some(keyword => 
+                            channel.name.toLowerCase().includes(keyword) || 
+                            (channel.event && channel.event.toLowerCase().includes(keyword)));
+                    });
+                }
                 
                 displayChannels(filtered);
             }
@@ -1243,7 +1329,7 @@
                     .then(data => {
                         if (data.contents) {
                             allChannels = extractChannels(data.contents);
-                            displayChannels(allChannels);
+                            filterChannels();
                         }
                     })
                     .catch(error => {
