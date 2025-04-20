@@ -1015,7 +1015,6 @@
                     const doc = parser.parseFromString(htmlContent, 'text/html');
                     const channels = [];
                     const timeRegex = /(\d{2}:\d{2})/;
-                    const channelRegex = /(.+?) \(CH-(\d+)\)/i;
 
                     const blocks = doc.querySelectorAll('strong');
                     
@@ -1026,31 +1025,21 @@
                         const timeMatch = blockText.match(timeRegex);
                         let time = timeMatch ? timeMatch[1] : '';
 
-                        if (time) {
-                            const [hours, minutes] = time.split(':').map(Number);
-                            let newHours = hours + 1;
-                            if (newHours >= 24) newHours -= 24;
-                            time = `${String(newHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-                        }
-
-                        let event = '';
-                        if (time) {
-                            event = blockText.split(timeMatch[0])[1].split(/\(CH-\d+\)/)[0].trim();
-                        } else {
-                            event = blockText.split(/\(CH-\d+\)/)[0].trim();
-                        }
+                        // Extraer el evento CORRECTAMENTE (sin nombres de canales)
+                        let eventText = block.innerHTML.split('<a')[0].trim();
+                        if (time) eventText = eventText.replace(time, '').trim();
 
                         const links = block.querySelectorAll('a');
                         links.forEach(link => {
-                            const channelMatch = link.textContent.match(channelRegex);
+                            const channelMatch = link.textContent.match(/(.+?) \(CH-(\d+)\)/i);
                             if (channelMatch) {
                                 channels.push({
-                                    name: channelMatch[1].trim(),
-                                    number: channelMatch[2],
-                                    time: time,
-                                    event: event,
+                                    name: channelMatch[1].trim(),  // Nombre del canal (ej: "ESPN 1 NL")
+                                    number: channelMatch[2],       // Número del canal (ej: "379")
+                                    time: time,                    // Hora (ej: "11:00")
+                                    event: eventText,              // Evento LIMPIO (sin nombres de canales)
                                     url: link.href,
-                                    rawText: `${time} ${event} ${channelMatch[1]} (CH-${channelMatch[2]})`
+                                    rawText: `${time} ${eventText} ${channelMatch[1]} (CH-${channelMatch[2]})` // Formato original
                                 });
                             }
                         });
