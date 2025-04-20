@@ -294,7 +294,6 @@
             font-size: 13px;
         }
         
-        /* REPRODUCTOR (ESTILO ORIGINAL) */
         .reproductor-container {
             position: fixed;
             top: 0;
@@ -386,7 +385,6 @@
             background: linear-gradient(135deg, #f39c12, #e67e22);
         }
         
-        /* FAVORITOS */
         .favoritos-container {
             margin-top: 20px;
             padding: 15px;
@@ -408,7 +406,6 @@
             color: #f1c40f;
         }
         
-        /* MODAL */
         .modal-favorito {
             position: fixed;
             top: 0;
@@ -450,7 +447,6 @@
             cursor: pointer;
         }
         
-        /* CHANNEL LIST IN TV MODE */
         .channel-list-container {
             position: fixed;
             top: 0;
@@ -512,6 +508,10 @@
         
         .channel-list-item:hover {
             background-color: rgba(255,255,255,0.1);
+        }
+        
+        .channel-list-item.current {
+            background-color: rgba(52, 152, 219, 0.3);
         }
         
         .channel-list-number {
@@ -811,7 +811,6 @@
                 function renderFilteredChannels(filterTerm = '') {
                     channelListContent.innerHTML = '';
                     
-                    // Agrupar canales por número y quedarse con el último evento según la hora
                     const uniqueChannels = {};
                     allChannels.forEach(channel => {
                         if (!uniqueChannels[channel.number] || 
@@ -826,9 +825,15 @@
                             channel.number.includes(filterTerm))
                         : Object.values(uniqueChannels);
                     
+                    let currentItem = null;
+                    
                     filtered.forEach(channel => {
                         const item = document.createElement('div');
                         item.className = 'channel-list-item';
+                        if (currentChannel && channel.number === currentChannel.number) {
+                            item.classList.add('current');
+                            currentItem = item;
+                        }
                         item.innerHTML = `<span class="channel-list-number">CH-${channel.number}</span>${channel.name}${channel.event ? '<br><small>' + channel.event + '</small>' : ''}`;
                         
                         item.addEventListener('click', function() {
@@ -842,6 +847,12 @@
                         
                         channelListContent.appendChild(item);
                     });
+
+                    if (currentItem) {
+                        setTimeout(() => {
+                            currentItem.scrollIntoView({ block: 'center' });
+                        }, 50);
+                    }
                 }
                 
                 renderFilteredChannels();
@@ -851,10 +862,6 @@
                 });
                 
                 channelListContainer.classList.toggle('show');
-                
-                setTimeout(() => {
-                    channelListSearch.focus();
-                }, 100);
             }
             
             playDirectChannelBtn.addEventListener('click', function() {
@@ -1025,7 +1032,6 @@
                         const timeMatch = blockText.match(timeRegex);
                         let time = timeMatch ? timeMatch[1] : '';
                         
-                        // Ajustar la hora sumando 1 hora para convertir de Reino Unido a España
                         if (time) {
                             const [hours, minutes] = time.split(':').map(Number);
                             let newHours = hours + 1;
@@ -1033,7 +1039,6 @@
                             time = `${String(newHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
                         }
 
-                        // Extraer el evento CORRECTAMENTE (sin nombres de canales)
                         let eventText = block.innerHTML.split('<a')[0].trim();
                         if (time) eventText = eventText.replace(time, '').trim();
 
@@ -1042,12 +1047,12 @@
                             const channelMatch = link.textContent.match(/(.+?) \(CH-(\d+)\)/i);
                             if (channelMatch) {
                                 channels.push({
-                                    name: channelMatch[1].trim(),  // Nombre del canal (ej: "ESPN 1 NL")
-                                    number: channelMatch[2],       // Número del canal (ej: "379")
-                                    time: time,                    // Hora (ej: "11:00")
-                                    event: eventText,              // Evento LIMPIO (sin nombres de canales)
+                                    name: channelMatch[1].trim(),
+                                    number: channelMatch[2],
+                                    time: time,
+                                    event: eventText,
                                     url: link.href,
-                                    rawText: `${time} ${eventText} ${channelMatch[1]} (CH-${channelMatch[2]})` // Formato original
+                                    rawText: `${time} ${eventText} ${channelMatch[1]} (CH-${channelMatch[2]})`
                                 });
                             }
                         });
