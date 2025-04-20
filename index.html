@@ -1024,6 +1024,14 @@
 
                         const timeMatch = blockText.match(timeRegex);
                         let time = timeMatch ? timeMatch[1] : '';
+                        
+                        // Ajustar la hora sumando 1 hora para convertir de Reino Unido a España
+                        if (time) {
+                            const [hours, minutes] = time.split(':').map(Number);
+                            let newHours = hours + 1;
+                            if (newHours >= 24) newHours -= 24;
+                            time = `${String(newHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                        }
 
                         // Extraer el evento CORRECTAMENTE (sin nombres de canales)
                         let eventText = block.innerHTML.split('<a')[0].trim();
