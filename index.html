@@ -868,11 +868,20 @@
                 function renderFilteredChannels(filterTerm = '') {
                     channelListContent.innerHTML = '';
                     
+                    // Agrupar canales por número y quedarse con el último evento según la hora
+                    const uniqueChannels = {};
+                    allChannels.forEach(channel => {
+                        if (!uniqueChannels[channel.number] || 
+                            (channel.time && (!uniqueChannels[channel.number].time || channel.time > uniqueChannels[channel.number].time))) {
+                            uniqueChannels[channel.number] = channel;
+                        }
+                    });
+                    
                     const filtered = filterTerm 
-                        ? allChannels.filter(channel => 
+                        ? Object.values(uniqueChannels).filter(channel => 
                             channel.name.toLowerCase().includes(filterTerm) || 
                             channel.number.includes(filterTerm))
-                        : allChannels;
+                        : Object.values(uniqueChannels);
                     
                     filtered.forEach(channel => {
                         const item = document.createElement('div');
