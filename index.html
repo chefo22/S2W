@@ -877,7 +877,7 @@
                     filtered.forEach(channel => {
                         const item = document.createElement('div');
                         item.className = 'channel-list-item';
-                        item.innerHTML = `<span class="channel-list-number">CH-${channel.number}</span>${channel.name}`;
+                        item.innerHTML = `<span class="channel-list-number">CH-${channel.number}</span>${channel.name}${channel.event ? '<br><small>' + channel.event + '</small>' : ''}`;
                         
                         item.addEventListener('click', function() {
                             let url = channel.url;
