@@ -757,39 +757,73 @@
     <button class="dark-mode-toggle" id="darkModeToggle">🌙</button>
 
     <script>
-        function exportFavorites() {
-            const favoritos = JSON.parse(localStorage.getItem('canalesFavoritos')) || [];
-            
-            if (favoritos.length === 0) {
-                alert('No tienes canales favoritos para exportar');
-                return;
+        function extractChannels(htmlContent) {
+            try {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlContent, 'text/html');
+                const channels = [];
+                const timeRegex = /(\d{2}:\d{2})/;
+
+                const blocks = doc.querySelectorAll('strong, p, h2');
+                
+                blocks.forEach(block => {
+                    const blockText = block.textContent.trim();
+                    if (!blockText.includes("(CH-") && !blockText.includes("CH-")) return;
+
+                    const timeMatch = blockText.match(timeRegex);
+                    let time = timeMatch ? timeMatch[1] : '';
+                    
+                    if (time) {
+                        const [hours, minutes] = time.split(':').map(Number);
+                        let newHours = hours + 1;
+                        if (newHours >= 24) newHours -= 24;
+                        time = `${String(newHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                    }
+
+                    let eventText = '';
+                    const textParts = blockText.split('(CH-');
+                    if (textParts.length > 1) {
+                        eventText = textParts[0].replace(time || '', '').trim();
+                    }
+
+                    const links = block.querySelectorAll('a');
+                    if (links.length > 0) {
+                        links.forEach(link => {
+                            const channelMatch = link.textContent.match(/(.+?) \(CH-(\d+)\)/i) || 
+                                               [null, link.textContent.trim(), link.href.match(/stream-(\d+)\.php/)?.[1]];
+                            if (channelMatch && channelMatch[2]) {
+                                channels.push({
+                                    name: channelMatch[1].trim(),
+                                    number: channelMatch[2],
+                                    time: time,
+                                    event: eventText,
+                                    url: link.href,
+                                    rawText: `${time} ${eventText} ${channelMatch[1]} (CH-${channelMatch[2]})`
+                                });
+                            }
+                        });
+                    } else {
+                        const channelMatches = blockText.matchAll(/(.+?)\(CH-(\d+)\)/g);
+                        for (const match of channelMatches) {
+                            const channelName = match[1].trim();
+                            const channelNumber = match[2];
+                            channels.push({
+                                name: channelName,
+                                number: channelNumber,
+                                time: time,
+                                event: eventText,
+                                url: `https://daddylivehd1.click/live/stream-${channelNumber}.php`,
+                                rawText: `${time} ${eventText} ${channelName} (CH-${channelNumber})`
+                            });
+                        }
+                    }
+                });
+
+                return channels;
+            } catch (error) {
+                console.error('Error al extraer canales:', error);
+                return [];
             }
-
-            const exportData = favoritos.map(fav => {
-                return {
-                    "link": fav.url,
-                    "title": "DaddyLive",
-                    "webName": fav.name,
-                    "deporte": "varios",
-                    "color": "#3498db",
-                    "idioma": "ES",
-                    "mostrarIcono": false,
-                    "mostrarMulti": true,
-                    "puntuacion": 4,
-                    "etiquetas": ["#Deportes"],
-                    "favorito": true
-                };
-            });
-
-            const dataStr = JSON.stringify(exportData, null, 2);
-            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            
-            const exportFileDefaultName = 'daddylive_favoritos.json';
-            
-            const linkElement = document.createElement('a');
-            linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', exportFileDefaultName);
-            linkElement.click();
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -829,7 +863,6 @@
             let currentFilter = 'all';
             let s2Toggle = true;
             
-            // Verificar modo oscuro guardado
             const darkMode = localStorage.getItem('darkMode') === 'true';
             if (darkMode) {
                 document.body.classList.add('dark-mode');
@@ -1072,55 +1105,6 @@
                 channelCounter.textContent = `Canales detectados: ${count}`;
             }
             
-            function extractChannels(htmlContent) {
-                try {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(htmlContent, 'text/html');
-                    const channels = [];
-                    const timeRegex = /(\d{2}:\d{2})/;
-
-                    const blocks = doc.querySelectorAll('strong');
-                    
-                    blocks.forEach(block => {
-                        const blockText = block.textContent.trim();
-                        if (!blockText.includes("CH-")) return;
-
-                        const timeMatch = blockText.match(timeRegex);
-                        let time = timeMatch ? timeMatch[1] : '';
-                        
-                        if (time) {
-                            const [hours, minutes] = time.split(':').map(Number);
-                            let newHours = hours + 1;
-                            if (newHours >= 24) newHours -= 24;
-                            time = `${String(newHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-                        }
-
-                        let eventText = block.innerHTML.split('<a')[0].trim();
-                        if (time) eventText = eventText.replace(time, '').trim();
-
-                        const links = block.querySelectorAll('a');
-                        links.forEach(link => {
-                            const channelMatch = link.textContent.match(/(.+?) \(CH-(\d+)\)/i);
-                            if (channelMatch) {
-                                channels.push({
-                                    name: channelMatch[1].trim(),
-                                    number: channelMatch[2],
-                                    time: time,
-                                    event: eventText,
-                                    url: link.href,
-                                    rawText: `${time} ${eventText} ${channelMatch[1]} (CH-${channelMatch[2]})`
-                                });
-                            }
-                        });
-                    });
-
-                    return channels;
-                } catch (error) {
-                    console.error('Error al extraer canales:', error);
-                    return [];
-                }
-            }
-            
             function displayChannels(channels) {
                 channelsContainer.innerHTML = '';
                 
@@ -1244,6 +1228,41 @@
                         loading.style.display = 'none';
                     });
             });
+
+            function exportFavorites() {
+                const favoritos = JSON.parse(localStorage.getItem('canalesFavoritos')) || [];
+                
+                if (favoritos.length === 0) {
+                    alert('No tienes canales favoritos para exportar');
+                    return;
+                }
+
+                const exportData = favoritos.map(fav => {
+                    return {
+                        "link": fav.url,
+                        "title": "DaddyLive",
+                        "webName": fav.name,
+                        "deporte": "varios",
+                        "color": "#3498db",
+                        "idioma": "ES",
+                        "mostrarIcono": false,
+                        "mostrarMulti": true,
+                        "puntuacion": 4,
+                        "etiquetas": ["#Deportes"],
+                        "favorito": true
+                    };
+                });
+
+                const dataStr = JSON.stringify(exportData, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                
+                const exportFileDefaultName = 'daddylive_favoritos.json';
+                
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+            }
         });
     </script>
 </body>
