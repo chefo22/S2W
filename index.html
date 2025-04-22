@@ -120,65 +120,7 @@
             padding: 5px;
             background-color: rgba(39, 174, 96, 0.1);
             border-radius: 15px;
-        }
-        
-        .switch-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        
-        .switch-text {
-            font-weight: 600;
-            color: var(--primary-color);
             cursor: pointer;
-        }
-        
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 26px;
-        }
-        
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 26px;
-        }
-        
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 20px;
-            width: 20px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        
-        input:checked + .slider {
-            background-color: var(--secondary-color);
-        }
-        
-        input:checked + .slider:before {
-            transform: translateX(24px);
         }
         
         .tv-controls {
@@ -186,55 +128,6 @@
             flex-direction: column;
             gap: 10px;
             margin-bottom: 15px;
-        }
-        
-        .tv-channel-display {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            text-align: center;
-            font-size: 14px;
-        }
-        
-        .tv-buttons {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .tv-button {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 6px;
-            background-color: var(--secondary-color);
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-        
-        .tv-button:hover {
-            opacity: 0.9;
-        }
-        
-        .tv-button-accent {
-            background-color: var(--accent-color);
-        }
-        
-        .direct-channel-input {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 15px;
-        }
-        
-        .direct-channel-input input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 15px;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
         
         .search-box {
@@ -258,6 +151,25 @@
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-light);
+        }
+
+        .search-box::after {
+            content: "#";
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .search-box.number-mode::before {
+            opacity: 0;
+        }
+
+        .search-box.number-mode::after {
+            opacity: 1;
         }
         
         .filter-buttons {
@@ -648,10 +560,6 @@
                 align-items: center;
             }
             
-            .tv-buttons {
-                flex: 1;
-            }
-            
             .filter-buttons {
                 flex-direction: row;
             }
@@ -713,31 +621,8 @@
         <div class="container" id="mainContainer">
             <div id="channelCounter" class="channel-counter">Canales detectados: 0</div>
             
-            <div class="switch-container">
-                <span class="switch-text" id="s2ToggleText"></span>
-            </div>
-            
-            <div class="tv-controls">
-                <div class="tv-channel-display" id="tvChannelDisplay"></div>
-                <div class="tv-buttons">
-                    <button id="fetchBtn" class="tv-button">
-                        <span>Cargar Canales</span>
-                    </button>
-                    <button id="exportFavoritesBtn" class="tv-button tv-button-accent">
-                        <span>Exportar Favoritos</span>
-                    </button>
-                </div>
-            </div>
-            
-            <div class="direct-channel-input">
-                <input type="number" id="directChannelInput" placeholder="N° Canal" min="1">
-                <button id="playDirectChannel" class="tv-button tv-button-accent">
-                    <span>Reproducir</span>
-                </button>
-            </div>
-            
             <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Buscar canales...">
+                <input type="text" id="searchInput" placeholder="Buscar canales o ingresar número (ej: #123)">
             </div>
             
             <div class="filter-buttons">
@@ -827,7 +712,6 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            const fetchBtn = document.getElementById('fetchBtn');
             const channelsContainer = document.getElementById('channelsContainer');
             const loading = document.getElementById('loading');
             const searchInput = document.getElementById('searchInput');
@@ -841,12 +725,7 @@
             const favoritosList = document.getElementById('favoritosList');
             const modalFavorito = document.getElementById('modalFavorito');
             const nombreFavoritoInput = document.getElementById('nombreFavorito');
-            const s2ToggleText = document.getElementById('s2ToggleText');
-            const directChannelInput = document.getElementById('directChannelInput');
-            const playDirectChannelBtn = document.getElementById('playDirectChannel');
-            const exportFavoritesBtn = document.getElementById('exportFavoritesBtn');
             const mainContainer = document.getElementById('mainContainer');
-            const tvChannelDisplay = document.getElementById('tvChannelDisplay');
             const botonListaCanales = document.getElementById('botonListaCanales');
             const channelListContainer = document.getElementById('channelListContainer');
             const channelListContent = document.getElementById('channelListContent');
@@ -869,6 +748,10 @@
                 darkModeToggle.textContent = '☀️';
             }
             
+            channelCounter.addEventListener('dblclick', function() {
+                cargarCanales();
+            });
+            
             darkModeToggle.addEventListener('click', function() {
                 document.body.classList.toggle('dark-mode');
                 const isDarkMode = document.body.classList.contains('dark-mode');
@@ -879,38 +762,6 @@
             if (favoritos.length > 0) {
                 mostrarFavoritos();
             }
-            
-            function updateTvDisplay() {
-                const mode = s2Toggle ? 'S2Wetch: ON' : 'DaddyLive: ON';
-                tvChannelDisplay.textContent = '';
-                s2ToggleText.textContent = '';
-            }
-            
-            updateTvDisplay();
-            
-            s2ToggleText.addEventListener('click', function() {
-                s2Toggle = !s2Toggle;
-                updateTvDisplay();
-                
-                if (currentChannel) {
-                    let newUrl, newName;
-                    const baseName = currentChannel.name.replace(/\(S2Wetch\)|\(DaddyLive\)/g, '').trim();
-                    
-                    if (s2Toggle) {
-                        newUrl = `https://stream2wetch.top/embed/stream-${currentChannel.number}.php`;
-                        newName = `${baseName} (S2Wetch)`;
-                    } else {
-                        newUrl = `https://daddylivehd1.click/channel-${currentChannel.number}`;
-                        newName = `${baseName} (DaddyLive)`;
-                    }
-                    
-                    currentChannel.url = newUrl;
-                    currentChannel.name = newName;
-                    videoFrame.src = newUrl;
-                }
-            });
-            
-            exportFavoritesBtn.addEventListener('click', exportFavorites);
             
             filterAll.addEventListener('click', function() {
                 currentFilter = 'all';
@@ -934,6 +785,40 @@
                 filterLive.classList.remove('active');
                 filterFavorites.classList.add('active');
                 filterChannels();
+            });
+            
+            searchInput.addEventListener('input', function() {
+                const searchBox = this.closest('.search-box');
+                
+                if (/^#?\d*$/.test(this.value)) {
+                    searchBox.classList.add('number-mode');
+                } else {
+                    searchBox.classList.remove('number-mode');
+                    filterChannels();
+                }
+            });
+
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const value = this.value.trim();
+                    
+                    if (/^#?\d+$/.test(value)) {
+                        const channelNumber = value.replace('#', '');
+                        let url, nombre;
+                        
+                        if (s2Toggle) {
+                            url = `https://stream2wetch.top/embed/stream-${channelNumber}.php`;
+                            nombre = `Canal ${channelNumber} (S2Wetch)`;
+                        } else {
+                            url = `https://daddylivehd1.click/channel-${channelNumber}`;
+                            nombre = `Canal ${channelNumber} (DaddyLive)`;
+                        }
+                        
+                        reproducirCanal(url, nombre, channelNumber);
+                        this.value = '';
+                        this.closest('.search-box').classList.remove('number-mode');
+                    }
+                }
             });
             
             window.mostrarListaCanales = function() {
@@ -997,31 +882,6 @@
                 channelListContainer.classList.toggle('show');
             }
             
-            playDirectChannelBtn.addEventListener('click', function() {
-                const channelNumber = directChannelInput.value.trim();
-                if (!channelNumber) {
-                    alert('Por favor ingresa un número de canal');
-                    return;
-                }
-                
-                let url, nombre;
-                if (s2Toggle) {
-                    url = `https://stream2wetch.top/embed/stream-${channelNumber}.php`;
-                    nombre = `Canal ${channelNumber} (S2Wetch)`;
-                } else {
-                    url = `https://daddylivehd1.click/channel-${channelNumber}`;
-                    nombre = `Canal ${channelNumber} (DaddyLive)`;
-                }
-                
-                reproducirCanal(url, nombre, channelNumber);
-            });
-            
-            directChannelInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    playDirectChannelBtn.click();
-                }
-            });
-            
             window.mostrarModalFavorito = function() {
                 if (!currentChannel) return;
                 nombreFavoritoInput.value = currentChannel.name;
@@ -1074,12 +934,12 @@
             
             function reproducirCanal(url, nombre, numero) {
                 currentChannel = {
-                    url: url,
+                    url: s2Toggle ? `https://stream2wetch.top/embed/stream-${numero}.php` : url,
                     name: nombre,
                     number: numero
                 };
                 
-                videoFrame.src = url;
+                videoFrame.src = currentChannel.url;
                 reproductorContainer.classList.add('mostrar');
                 reproductor.style.height = alturaReproductor;
                 channelListContainer.style.height = alturaReproductor;
@@ -1200,9 +1060,7 @@
                 displayChannels(filtered);
             }
             
-            searchInput.addEventListener('input', filterChannels);
-            
-            fetchBtn.addEventListener('click', function() {
+            function cargarCanales() {
                 loading.style.display = 'block';
                 channelsContainer.innerHTML = '';
                 updateChannelCounter(0);
@@ -1227,42 +1085,9 @@
                     .finally(() => {
                         loading.style.display = 'none';
                     });
-            });
-
-            function exportFavorites() {
-                const favoritos = JSON.parse(localStorage.getItem('canalesFavoritos')) || [];
-                
-                if (favoritos.length === 0) {
-                    alert('No tienes canales favoritos para exportar');
-                    return;
-                }
-
-                const exportData = favoritos.map(fav => {
-                    return {
-                        "link": fav.url,
-                        "title": "DaddyLive",
-                        "webName": fav.name,
-                        "deporte": "varios",
-                        "color": "#3498db",
-                        "idioma": "ES",
-                        "mostrarIcono": false,
-                        "mostrarMulti": true,
-                        "puntuacion": 4,
-                        "etiquetas": ["#Deportes"],
-                        "favorito": true
-                    };
-                });
-
-                const dataStr = JSON.stringify(exportData, null, 2);
-                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-                
-                const exportFileDefaultName = 'daddylive_favoritos.json';
-                
-                const linkElement = document.createElement('a');
-                linkElement.setAttribute('href', dataUri);
-                linkElement.setAttribute('download', exportFileDefaultName);
-                linkElement.click();
             }
+            
+            cargarCanales();
         });
     </script>
 </body>
