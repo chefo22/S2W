@@ -591,8 +591,7 @@
             <iframe id="videoFrame" src="" allowfullscreen></iframe>
         </div>
         <div class="player-controls">
-            <button class="tv-control-button tv-control-green" id="botonGuardarReproductor" onclick="mostrarModalFavorito()" title="Guardar en favoritos">+</button>
-            <button class="tv-control-button tv-control-blue" id="botonRefrescarReproductor" onclick="refrescarReproductor()" title="Refrescar">↻</button>
+            <button class="tv-control-button tv-control-green" id="botonGuardarReproductor" onclick="mostrarModalFavorito()" title="Guardar en favoritos">★</button>
             <button class="tv-control-button tv-control-yellow" id="botonListaCanales" onclick="mostrarListaCanales()" title="Lista de canales">≡</button>
             <button class="tv-control-button tv-control-red" id="botonCerrarReproductor" onclick="cerrarReproductor()" title="Cerrar">×</button>
         </div>
@@ -669,9 +668,7 @@
                     const textParts = blockText.split('(CH-');
                     if (textParts.length > 1) {
                         eventText = textParts[0].trim();
-                        // Eliminar completamente cualquier formato de hora que pueda quedar
                         eventText = eventText.replace(/\d{1,2}:\d{2}(?::\d{2})?(?:\s?[APap][mM])?/g, '').trim();
-                        // Eliminar espacios dobles que puedan quedar
                         eventText = eventText.replace(/\s{2,}/g, ' ').trim();
                     }
 
@@ -724,7 +721,6 @@
             const reproductorContainer = document.getElementById('reproductorContainer');
             const botonCerrar = document.getElementById('botonCerrarReproductor');
             const botonGuardar = document.getElementById('botonGuardarReproductor');
-            const botonRefrescar = document.getElementById('botonRefrescarReproductor');
             const favoritosContainer = document.getElementById('favoritosContainer');
             const favoritosList = document.getElementById('favoritosList');
             const modalFavorito = document.getElementById('modalFavorito');
@@ -826,30 +822,71 @@
             });
             
             window.mostrarListaCanales = function() {
-                if (!allChannels.length) return;
+                if (!allChannels.length && currentFilter !== 'favorites') return;
                 
                 channelListContent.innerHTML = '';
                 
                 function renderFilteredChannels(filterTerm = '') {
                     channelListContent.innerHTML = '';
                     
-                    const uniqueChannels = {};
-                    allChannels.forEach(channel => {
-                        if (!uniqueChannels[channel.number] || 
-                            (channel.time && (!uniqueChannels[channel.number].time || channel.time > uniqueChannels[channel.number].time))) {
-                            uniqueChannels[channel.number] = channel;
-                        }
-                    });
+                    let channelsToShow = [];
+                    const now = new Date();
+                    const searchTerm = searchInput.value.toLowerCase();
                     
-                    const filtered = filterTerm 
-                        ? Object.values(uniqueChannels).filter(channel => 
+                    // 1. Determinar qué canales mostrar según el filtro actual
+                    if (currentFilter === 'favorites') {
+                        channelsToShow = favoritos.map(fav => ({
+                            name: fav.name,
+                            number: fav.number,
+                            url: fav.url,
+                            event: '',
+                            time: '',
+                            rawText: fav.name
+                        }));
+                    } else if (currentFilter === 'live') {
+                        // Filtrar canales en vivo (con tiempo dentro de +/- 30 minutos)
+                        channelsToShow = allChannels.filter(channel => {
+                            if (!channel.time) return false;
+                            
+                            const [hours, minutes] = channel.time.split(':').map(Number);
+                            const eventTime = new Date();
+                            eventTime.setHours(hours, minutes, 0, 0);
+                            
+                            const diffMinutes = (now - eventTime) / (1000 * 60);
+                            return diffMinutes >= -30 && diffMinutes <= 120;
+                        });
+                    } else {
+                        // Mostrar todos los canales (sin filtro de tiempo)
+                        const uniqueChannels = {};
+                        allChannels.forEach(channel => {
+                            if (!uniqueChannels[channel.number] || 
+                                (channel.time && (!uniqueChannels[channel.number].time || channel.time > uniqueChannels[channel.number].time))) {
+                                uniqueChannels[channel.number] = channel;
+                            }
+                        });
+                        channelsToShow = Object.values(uniqueChannels);
+                    }
+                    
+                    // 2. Aplicar búsqueda principal (si existe)
+                    if (searchTerm && currentFilter !== 'favorites') {
+                        channelsToShow = channelsToShow.filter(channel => 
+                            channel.rawText.toLowerCase().includes(searchTerm) || 
+                            channel.number.includes(searchTerm.replace('#', '')));
+                    }
+                    
+                    // 3. Aplicar búsqueda dentro de la lista (si existe)
+                    if (filterTerm) {
+                        channelsToShow = channelsToShow.filter(channel => 
                             channel.name.toLowerCase().includes(filterTerm) || 
-                            channel.number.includes(filterTerm))
-                        : Object.values(uniqueChannels);
+                            channel.number.includes(filterTerm) ||
+                            (channel.event && channel.event.toLowerCase().includes(filterTerm))
+                        );
+                    }
                     
+                    // 4. Mostrar los canales filtrados
                     let currentItem = null;
                     
-                    filtered.forEach(channel => {
+                    channelsToShow.forEach(channel => {
                         const item = document.createElement('div');
                         item.className = 'channel-list-item';
                         if (currentChannel && channel.number === currentChannel.number) {
@@ -921,12 +958,6 @@
                 } else {
                     alert('Este canal ya está en tus favoritos');
                     cerrarModalFavorito();
-                }
-            }
-            
-            window.refrescarReproductor = function() {
-                if (currentChannel) {
-                    videoFrame.src = currentChannel.url;
                 }
             }
             
