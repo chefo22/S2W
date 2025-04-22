@@ -668,7 +668,11 @@
                     let eventText = '';
                     const textParts = blockText.split('(CH-');
                     if (textParts.length > 1) {
-                        eventText = textParts[0].replace(time || '', '').trim();
+                        eventText = textParts[0].trim();
+                        // Eliminar completamente cualquier formato de hora que pueda quedar
+                        eventText = eventText.replace(/\d{1,2}:\d{2}(?::\d{2})?(?:\s?[APap][mM])?/g, '').trim();
+                        // Eliminar espacios dobles que puedan quedar
+                        eventText = eventText.replace(/\s{2,}/g, ' ').trim();
                     }
 
                     const links = block.querySelectorAll('a');
