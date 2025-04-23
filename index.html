@@ -583,6 +583,25 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
             z-index: 1000;
         }
+
+        .fullscreen-toggle {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
     </style>
 </head>
 <body>
@@ -639,6 +658,7 @@
     </div>
 
     <button class="dark-mode-toggle" id="darkModeToggle">🌙</button>
+    <button class="fullscreen-toggle" id="fullscreenToggle" title="Pantalla completa">⛶</button>
 
     <script>
         function extractChannels(htmlContent) {
@@ -734,6 +754,7 @@
             const filterLive = document.getElementById('filterLive');
             const filterFavorites = document.getElementById('filterFavorites');
             const darkModeToggle = document.getElementById('darkModeToggle');
+            const fullscreenToggle = document.getElementById('fullscreenToggle');
             
             let allChannels = [];
             let currentChannel = null;
@@ -757,6 +778,26 @@
                 const isDarkMode = document.body.classList.contains('dark-mode');
                 localStorage.setItem('darkMode', isDarkMode);
                 darkModeToggle.textContent = isDarkMode ? '☀️' : '🌙';
+            });
+
+            fullscreenToggle.addEventListener('click', function() {
+                if (!document.fullscreenElement) {
+                    if (document.documentElement.requestFullscreen) {
+                        document.documentElement.requestFullscreen();
+                    } else if (document.documentElement.webkitRequestFullscreen) { /* Safari */
+                        document.documentElement.webkitRequestFullscreen();
+                    } else if (document.documentElement.msRequestFullscreen) { /* IE11 */
+                        document.documentElement.msRequestFullscreen();
+                    }
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.webkitExitFullscreen) { /* Safari */
+                        document.webkitExitFullscreen();
+                    } else if (document.msExitFullscreen) { /* IE11 */
+                        document.msExitFullscreen();
+                    }
+                }
             });
             
             if (favoritos.length > 0) {
