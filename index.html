@@ -673,120 +673,42 @@
                 const timeRegex = /(\d{2}:\d{2})/;
                 const uniqueKeys = new Set();
 
-                const blocks = doc.querySelectorAll('strong, p, h2');
+                const strongElements = doc.querySelectorAll('strong');
                 
-                blocks.forEach(block => {
-                    const blockText = block.textContent.trim();
-                    if (!blockText.includes("(CH-") && !blockText.includes("CH-")) return;
-
-                    const timeMatch = blockText.match(timeRegex);
-                    let time = timeMatch ? timeMatch[1] : '';
+                strongElements.forEach(strong => {
+                    const eventText = strong.childNodes[0]?.textContent.trim() || '';
                     
-                    if (time) {
-                        const [hours, minutes] = time.split(':').map(Number);
-                        let newHours = hours + 1;
-                        if (newHours >= 24) newHours -= 24;
-                        time = `${String(newHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-                    }
-
-                    let eventText = '';
-                    const textParts = blockText.split('(CH-');
-                    if (textParts.length > 1) {
-                        eventText = textParts[0].trim();
-                        eventText = eventText.replace(/\d{1,2}:\d{2}(?::\d{2})?(?:\s?[APap][mM])?/g, '').trim();
-                        eventText = eventText.replace(/\s{2,}/g, ' ').trim();
-                    }
-
-                    const links = block.querySelectorAll('a');
-                    if (links.length > 0) {
-                        links.forEach(link => {
-                            const channelMatch = link.textContent.match(/(.+?) \(CH-(\d+)\)/i) || 
-                                               [null, link.textContent.trim(), link.href.match(/stream-(\d+)\.php/)?.[1]];
-                            if (channelMatch && channelMatch[2]) {
-                                const key = `${time}-${channelMatch[2]}`;
-                                if (!uniqueKeys.has(key)) {
-                                    uniqueKeys.add(key);
-                                    channels.push({
-                                        name: channelMatch[1].trim(),
-                                        number: channelMatch[2],
-                                        time: time,
-                                        event: eventText,
-                                        url: link.href,
-                                        rawText: `${time} ${eventText} ${channelMatch[1]} (CH-${channelMatch[2]})`,
-                                        isSecondary: false
-                                    });
-                                }
-                            }
-                        });
-                    } else {
-                        const channelMatches = blockText.matchAll(/(.+?)\(CH-(\d+)\)/g);
-                        for (const match of channelMatches) {
-                            const channelName = match[1].trim();
-                            const channelNumber = match[2];
-                            const key = `${time}-${channelNumber}`;
+                    const links = strong.querySelectorAll('a');
+                    links.forEach(link => {
+                        const linkText = link.textContent.trim();
+                        const channelMatch = linkText.match(/(.+?)\s*\(CH-(\d+)\)/i);
+                        
+                        if (channelMatch) {
+                            const channelName = channelMatch[1].trim();
+                            const channelNumber = channelMatch[2];
+                            const key = `${channelNumber}-${channelName}`;
+                            
                             if (!uniqueKeys.has(key)) {
                                 uniqueKeys.add(key);
                                 channels.push({
                                     name: channelName,
                                     number: channelNumber,
-                                    time: time,
-                                    event: eventText,
-                                    url: `https://daddylivehd1.click/live/stream-${channelNumber}.php`,
-                                    rawText: `${time} ${eventText} ${channelName} (CH-${channelNumber})`,
+                                    time: eventText.match(timeRegex)?.[1] || '',
+                                    event: eventText.replace(timeRegex, '').trim(),
+                                    url: link.href,
+                                    rawText: linkText,
                                     isSecondary: false
                                 });
                             }
                         }
-                    }
+                    });
                 });
-
-                // Si encontramos menos de 25 canales con el primer método, intentamos el segundo método
-                if (channels.length < 25) {
-                    const secondMethodChannels = extractChannelsSecondMethod(htmlContent, uniqueKeys);
-                    channels.push(...secondMethodChannels);
-                }
 
                 return channels;
             } catch (error) {
                 console.error('Error al extraer canales:', error);
                 return [];
             }
-        }
-
-        function extractChannelsSecondMethod(htmlContent, uniqueKeys) {
-            const channels = [];
-            const regex = /(\d{2}:\d{2})?\s*([^\(]+)\(CH-(\d+)\)/g;
-            let match;
-            
-            while ((match = regex.exec(htmlContent)) !== null) {
-                let time = match[1] || '';
-                if (time) {
-                    const [hours, minutes] = time.split(':').map(Number);
-                    let newHours = hours + 1;
-                    if (newHours >= 24) newHours -= 24;
-                    time = `${String(newHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-                }
-                
-                const eventText = match[2].trim().replace(/\d{1,2}:\d{2}(?::\d{2})?(?:\s?[APap][mM])?/g, '').replace(/\s{2,}/g, ' ').trim();
-                const channelName = match[2].trim();
-                const channelNumber = match[3];
-                const key = `${time}-${channelNumber}`;
-                
-                if (!uniqueKeys.has(key)) {
-                    uniqueKeys.add(key);
-                    channels.push({
-                        name: channelName,
-                        number: channelNumber,
-                        time: time,
-                        event: eventText,
-                        url: `https://daddylivehd1.click/live/stream-${channelNumber}.php`,
-                        rawText: `${time} ${eventText} ${channelName} (CH-${channelNumber})`,
-                        isSecondary: true
-                    });
-                }
-            }
-            
-            return channels;
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -841,17 +763,17 @@
                 if (!document.fullscreenElement) {
                     if (document.documentElement.requestFullscreen) {
                         document.documentElement.requestFullscreen();
-                    } else if (document.documentElement.webkitRequestFullscreen) { /* Safari */
+                    } else if (document.documentElement.webkitRequestFullscreen) {
                         document.documentElement.webkitRequestFullscreen();
-                    } else if (document.documentElement.msRequestFullscreen) { /* IE11 */
+                    } else if (document.documentElement.msRequestFullscreen) {
                         document.documentElement.msRequestFullscreen();
                     }
                 } else {
                     if (document.exitFullscreen) {
                         document.exitFullscreen();
-                    } else if (document.webkitExitFullscreen) { /* Safari */
+                    } else if (document.webkitExitFullscreen) {
                         document.webkitExitFullscreen();
-                    } else if (document.msExitFullscreen) { /* IE11 */
+                    } else if (document.msExitFullscreen) {
                         document.msExitFullscreen();
                     }
                 }
@@ -931,7 +853,6 @@
                     const now = new Date();
                     const searchTerm = searchInput.value.toLowerCase();
                     
-                    // 1. Determinar qué canales mostrar según el filtro actual
                     if (currentFilter === 'favorites') {
                         channelsToShow = favoritos.map(fav => ({
                             name: fav.name,
@@ -943,7 +864,6 @@
                             isSecondary: false
                         }));
                     } else if (currentFilter === 'live') {
-                        // Filtrar canales en vivo (con tiempo dentro de +/- 30 minutos)
                         channelsToShow = allChannels.filter(channel => {
                             if (!channel.time) return false;
                             
@@ -955,7 +875,6 @@
                             return diffMinutes >= -30 && diffMinutes <= 120;
                         });
                     } else {
-                        // Mostrar todos los canales (sin filtro de tiempo)
                         const uniqueChannels = {};
                         allChannels.forEach(channel => {
                             if (!uniqueChannels[channel.number] || 
@@ -966,14 +885,12 @@
                         channelsToShow = Object.values(uniqueChannels);
                     }
                     
-                    // 2. Aplicar búsqueda principal (si existe)
                     if (searchTerm && currentFilter !== 'favorites') {
                         channelsToShow = channelsToShow.filter(channel => 
                             channel.rawText.toLowerCase().includes(searchTerm) || 
                             channel.number.includes(searchTerm.replace('#', '')));
                     }
                     
-                    // 3. Aplicar búsqueda dentro de la lista (si existe)
                     if (filterTerm) {
                         channelsToShow = channelsToShow.filter(channel => 
                             channel.name.toLowerCase().includes(filterTerm) || 
@@ -982,7 +899,6 @@
                         );
                     }
                     
-                    // 4. Mostrar los canales filtrados
                     let currentItem = null;
                     
                     channelsToShow.forEach(channel => {
