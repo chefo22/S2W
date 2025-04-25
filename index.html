@@ -671,7 +671,6 @@
                 const doc = parser.parseFromString(htmlContent, 'text/html');
                 const channels = [];
                 const timeRegex = /(\d{2}:\d{2})/;
-                const uniqueKeys = new Set();
 
                 const strongElements = doc.querySelectorAll('strong');
                 
@@ -686,20 +685,16 @@
                         if (channelMatch) {
                             const channelName = channelMatch[1].trim();
                             const channelNumber = channelMatch[2];
-                            const key = `${channelNumber}-${channelName}`;
                             
-                            if (!uniqueKeys.has(key)) {
-                                uniqueKeys.add(key);
-                                channels.push({
-                                    name: channelName,
-                                    number: channelNumber,
-                                    time: eventText.match(timeRegex)?.[1] || '',
-                                    event: eventText.replace(timeRegex, '').trim(),
-                                    url: link.href,
-                                    rawText: linkText,
-                                    isSecondary: false
-                                });
-                            }
+                            channels.push({
+                                name: channelName,
+                                number: channelNumber,
+                                time: eventText.match(timeRegex)?.[1] || '',
+                                event: eventText.replace(timeRegex, '').trim(),
+                                url: link.href,
+                                rawText: linkText,
+                                isSecondary: false
+                            });
                         }
                     });
                 });
@@ -875,14 +870,7 @@
                             return diffMinutes >= -30 && diffMinutes <= 120;
                         });
                     } else {
-                        const uniqueChannels = {};
-                        allChannels.forEach(channel => {
-                            if (!uniqueChannels[channel.number] || 
-                                (channel.time && (!uniqueChannels[channel.number].time || channel.time > uniqueChannels[channel.number].time))) {
-                                uniqueChannels[channel.number] = channel;
-                            }
-                        });
-                        channelsToShow = Object.values(uniqueChannels);
+                        channelsToShow = allChannels;
                     }
                     
                     if (searchTerm && currentFilter !== 'favorites') {
