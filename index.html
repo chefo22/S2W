@@ -267,6 +267,10 @@
             font-weight: bold;
             font-size: 14px;
         }
+
+        .channel-number.secondary {
+            color: var(--success-color);
+        }
         
         .channel-event {
             color: var(--text-light);
@@ -667,6 +671,7 @@
                 const doc = parser.parseFromString(htmlContent, 'text/html');
                 const channels = [];
                 const timeRegex = /(\d{2}:\d{2})/;
+                const uniqueKeys = new Set();
 
                 const blocks = doc.querySelectorAll('strong, p, h2');
                 
@@ -698,14 +703,19 @@
                             const channelMatch = link.textContent.match(/(.+?) \(CH-(\d+)\)/i) || 
                                                [null, link.textContent.trim(), link.href.match(/stream-(\d+)\.php/)?.[1]];
                             if (channelMatch && channelMatch[2]) {
-                                channels.push({
-                                    name: channelMatch[1].trim(),
-                                    number: channelMatch[2],
-                                    time: time,
-                                    event: eventText,
-                                    url: link.href,
-                                    rawText: `${time} ${eventText} ${channelMatch[1]} (CH-${channelMatch[2]})`
-                                });
+                                const key = `${time}-${channelMatch[2]}`;
+                                if (!uniqueKeys.has(key)) {
+                                    uniqueKeys.add(key);
+                                    channels.push({
+                                        name: channelMatch[1].trim(),
+                                        number: channelMatch[2],
+                                        time: time,
+                                        event: eventText,
+                                        url: link.href,
+                                        rawText: `${time} ${eventText} ${channelMatch[1]} (CH-${channelMatch[2]})`,
+                                        isSecondary: false
+                                    });
+                                }
                             }
                         });
                     } else {
@@ -713,23 +723,70 @@
                         for (const match of channelMatches) {
                             const channelName = match[1].trim();
                             const channelNumber = match[2];
-                            channels.push({
-                                name: channelName,
-                                number: channelNumber,
-                                time: time,
-                                event: eventText,
-                                url: `https://daddylivehd1.click/live/stream-${channelNumber}.php`,
-                                rawText: `${time} ${eventText} ${channelName} (CH-${channelNumber})`
-                            });
+                            const key = `${time}-${channelNumber}`;
+                            if (!uniqueKeys.has(key)) {
+                                uniqueKeys.add(key);
+                                channels.push({
+                                    name: channelName,
+                                    number: channelNumber,
+                                    time: time,
+                                    event: eventText,
+                                    url: `https://daddylivehd1.click/live/stream-${channelNumber}.php`,
+                                    rawText: `${time} ${eventText} ${channelName} (CH-${channelNumber})`,
+                                    isSecondary: false
+                                });
+                            }
                         }
                     }
                 });
+
+                // Si encontramos menos de 25 canales con el primer método, intentamos el segundo método
+                if (channels.length < 25) {
+                    const secondMethodChannels = extractChannelsSecondMethod(htmlContent, uniqueKeys);
+                    channels.push(...secondMethodChannels);
+                }
 
                 return channels;
             } catch (error) {
                 console.error('Error al extraer canales:', error);
                 return [];
             }
+        }
+
+        function extractChannelsSecondMethod(htmlContent, uniqueKeys) {
+            const channels = [];
+            const regex = /(\d{2}:\d{2})?\s*([^\(]+)\(CH-(\d+)\)/g;
+            let match;
+            
+            while ((match = regex.exec(htmlContent)) !== null) {
+                let time = match[1] || '';
+                if (time) {
+                    const [hours, minutes] = time.split(':').map(Number);
+                    let newHours = hours + 1;
+                    if (newHours >= 24) newHours -= 24;
+                    time = `${String(newHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                }
+                
+                const eventText = match[2].trim().replace(/\d{1,2}:\d{2}(?::\d{2})?(?:\s?[APap][mM])?/g, '').replace(/\s{2,}/g, ' ').trim();
+                const channelName = match[2].trim();
+                const channelNumber = match[3];
+                const key = `${time}-${channelNumber}`;
+                
+                if (!uniqueKeys.has(key)) {
+                    uniqueKeys.add(key);
+                    channels.push({
+                        name: channelName,
+                        number: channelNumber,
+                        time: time,
+                        event: eventText,
+                        url: `https://daddylivehd1.click/live/stream-${channelNumber}.php`,
+                        rawText: `${time} ${eventText} ${channelName} (CH-${channelNumber})`,
+                        isSecondary: true
+                    });
+                }
+            }
+            
+            return channels;
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -882,7 +939,8 @@
                             url: fav.url,
                             event: '',
                             time: '',
-                            rawText: fav.name
+                            rawText: fav.name,
+                            isSecondary: false
                         }));
                     } else if (currentFilter === 'live') {
                         // Filtrar canales en vivo (con tiempo dentro de +/- 30 minutos)
@@ -1073,7 +1131,7 @@
                     let btnContent = `
                         <div class="channel-name-container">
                             <div class="channel-name">${channel.name}</div>
-                            <div class="channel-number">CH-${channel.number}</div>
+                            <div class="channel-number ${channel.isSecondary ? 'secondary' : ''}">CH-${channel.number}</div>
                         </div>
                     `;
                     
@@ -1128,7 +1186,8 @@
                             name: fav.name,
                             number: fav.number,
                             url: fav.url,
-                            rawText: fav.name
+                            rawText: fav.name,
+                            isSecondary: false
                         };
                     });
                 }
