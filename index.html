@@ -627,7 +627,8 @@
             playerVisible: false,
             healthCheckInterval: null,
             s2Toggle: true,
-            isLoading: false
+            isLoading: false,
+            longPressTimer: null
         };
 
         const elements = {
@@ -785,7 +786,42 @@
                     <p class="channel-event">${channel.event}</p>
                 `;
                 
+                // Evento para reproducir al hacer click normal
                 channelCard.addEventListener('click', () => playChannel(channel));
+                
+                // Evento para eliminar favorito al mantener pulsado
+                channelCard.addEventListener('touchstart', (e) => {
+                    if (!channel.isFavorite) return;
+                    
+                    state.longPressTimer = setTimeout(() => {
+                        e.preventDefault();
+                        if (confirm(`¿Eliminar ${channel.name} de favoritos?`)) {
+                            removeFavorite(channel.number);
+                        }
+                    }, 1000);
+                });
+                
+                channelCard.addEventListener('touchend', () => {
+                    clearTimeout(state.longPressTimer);
+                });
+                
+                channelCard.addEventListener('mousedown', (e) => {
+                    if (!channel.isFavorite) return;
+                    
+                    state.longPressTimer = setTimeout(() => {
+                        if (confirm(`¿Eliminar ${channel.name} de favoritos?`)) {
+                            removeFavorite(channel.number);
+                        }
+                    }, 1000);
+                });
+                
+                channelCard.addEventListener('mouseup', () => {
+                    clearTimeout(state.longPressTimer);
+                });
+                
+                channelCard.addEventListener('mouseleave', () => {
+                    clearTimeout(state.longPressTimer);
+                });
                 
                 elements.channelsGrid.appendChild(channelCard);
             });
@@ -819,7 +855,7 @@
                         eventTime.setHours(hours, minutes, 0, 0);
                         
                         const diffMinutes = (now - eventTime) / (1000 * 60);
-                        return diffMinutes >= -30 && diffMinutes <= 120;
+                        return diffMinutes >= -30 && diffMinutes <= 240;
                     });
                     break;
                 case 'favorites':
@@ -889,7 +925,8 @@
 
         function showFavoriteModal() {
             if (!state.currentStream) return;
-            elements.favoriteNameInput.value = state.currentStream.name;
+            const existingFavorite = state.favorites.find(f => f.number === state.currentStream.number);
+            elements.favoriteNameInput.value = existingFavorite ? existingFavorite.name : state.currentStream.name;
             elements.favoriteModal.style.display = 'flex';
         }
 
@@ -911,9 +948,7 @@
             if (existingIndex === -1) {
                 state.favorites.push({
                     name: favoriteName,
-                    number: state.currentStream.number,
-                    url: state.currentStream.url,
-                    originalName: state.currentStream.name
+                    number: state.currentStream.number
                 });
             } else {
                 state.favorites[existingIndex].name = favoriteName;
@@ -925,7 +960,6 @@
             }
             
             localStorage.setItem('daddyliveFavorites', JSON.stringify(state.favorites));
-            
             elements.favoriteBtn.classList.add('active');
             
             if (state.currentFilter === 'favorites') {
@@ -935,22 +969,22 @@
             hideFavoriteModal();
         }
 
-        function removeFavorite() {
-            if (!state.currentStream) return;
+        function removeFavorite(channelNumber) {
+            state.favorites = state.favorites.filter(f => f.number !== channelNumber);
             
-            state.favorites = state.favorites.filter(f => f.number !== state.currentStream.number);
-            
-            const channelIndex = state.channels.findIndex(c => c.number === state.currentStream.number);
+            const channelIndex = state.channels.findIndex(c => c.number === channelNumber);
             if (channelIndex !== -1) {
                 state.channels[channelIndex].isFavorite = false;
             }
             
             localStorage.setItem('daddyliveFavorites', JSON.stringify(state.favorites));
             
-            elements.favoriteBtn.classList.remove('active');
-            
             if (state.currentFilter === 'favorites') {
                 renderChannels();
+            }
+            
+            if (state.currentStream && state.currentStream.number === channelNumber) {
+                elements.favoriteBtn.classList.remove('active');
             }
         }
 
@@ -1036,12 +1070,30 @@
             
             elements.closePlayerBtn.addEventListener('click', closePlayer);
             
+            elements.favoriteBtn.addEventListener('mousedown', () => {
+                if (!state.currentStream) return;
+                
+                state.longPressTimer = setTimeout(() => {
+                    if (state.currentStream.isFavorite) {
+                        if (confirm('¿Quieres eliminar este canal de favoritos?')) {
+                            removeFavorite(state.currentStream.number);
+                        }
+                    }
+                }, 1000);
+            });
+            
+            elements.favoriteBtn.addEventListener('mouseup', () => {
+                clearTimeout(state.longPressTimer);
+            });
+            
+            elements.favoriteBtn.addEventListener('mouseleave', () => {
+                clearTimeout(state.longPressTimer);
+            });
+            
             elements.favoriteBtn.addEventListener('click', () => {
                 if (!state.currentStream) return;
                 
-                if (state.currentStream.isFavorite) {
-                    removeFavorite();
-                } else {
+                if (!state.currentStream.isFavorite) {
                     showFavoriteModal();
                 }
             });
