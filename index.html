@@ -103,6 +103,12 @@
             background-color: var(--danger);
         }
 
+        .channel-count {
+            font-size: 0.9rem;
+            color: white;
+            opacity: 0.8;
+        }
+
         /* Main Layout */
         .main-container {
             max-width: 1400px;
@@ -525,6 +531,11 @@
                 text-align: center;
             }
 
+            .header-actions {
+                flex-direction: column;
+                gap: 8px;
+            }
+
             .main-container {
                 padding: 0 1rem;
             }
@@ -552,6 +563,7 @@
         <div class="header-actions">
             <span>Estado:</span>
             <span class="status-badge">Operativo</span>
+            <span class="channel-count" id="channelCount">0 canales</span>
         </div>
     </header>
 
@@ -564,6 +576,7 @@
                 <div class="player-controls">
                     <div class="control-group">
                         <button class="control-btn" title="Guardar favorito" id="favoriteBtn">★</button>
+                        <button class="control-btn" title="Pantalla completa" id="playerFullscreenBtn">⛶</button>
                         <button class="control-btn" title="Lista de canales" id="channelListBtn">≡</button>
                         <button class="control-btn" title="Cerrar" id="closePlayerBtn">×</button>
                     </div>
@@ -658,6 +671,7 @@
             filterLive: document.getElementById('filterLive'),
             filterFavorites: document.getElementById('filterFavorites'),
             favoriteBtn: document.getElementById('favoriteBtn'),
+            playerFullscreenBtn: document.getElementById('playerFullscreenBtn'),
             channelListBtn: document.getElementById('channelListBtn'),
             closePlayerBtn: document.getElementById('closePlayerBtn'),
             connectionStatus: document.getElementById('connectionStatus'),
@@ -666,6 +680,7 @@
             darkModeBtn: document.getElementById('darkModeBtn'),
             fullscreenBtn: document.getElementById('fullscreenBtn'),
             statusBadge: document.querySelector('.status-badge'),
+            channelCount: document.getElementById('channelCount'),
             channelListModal: document.getElementById('channelListModal'),
             channelListContent: document.getElementById('channelListContent'),
             channelListSearch: document.getElementById('channelListSearch'),
@@ -708,6 +723,7 @@
                         state.channels = extractChannels(data.contents);
                         renderChannels();
                         updateSystemStatus('healthy');
+                        updateChannelCount(); // Actualizar contador de canales
                     }
                 })
                 .catch(error => {
@@ -718,6 +734,12 @@
                 .finally(() => {
                     hideLoading();
                 });
+        }
+
+        // Actualizar contador de canales
+        function updateChannelCount() {
+            const count = state.channels.length;
+            elements.channelCount.textContent = `${count} canales`;
         }
 
         // Extraer canales del HTML
@@ -1121,6 +1143,16 @@
                 }
             });
             
+            elements.playerFullscreenBtn.addEventListener('click', () => {
+                if (elements.playerContainer.requestFullscreen) {
+                    elements.playerContainer.requestFullscreen();
+                } else if (elements.playerContainer.webkitRequestFullscreen) { /* Safari */
+                    elements.playerContainer.webkitRequestFullscreen();
+                } else if (elements.playerContainer.msRequestFullscreen) { /* IE11 */
+                    elements.playerContainer.msRequestFullscreen();
+                }
+            });
+            
             elements.channelListBtn.addEventListener('click', showChannelList);
             
             elements.fullscreenBtn.addEventListener('click', () => {
@@ -1129,8 +1161,8 @@
                         document.exitFullscreen();
                     }
                 } else {
-                    if (elements.playerContainer.requestFullscreen) {
-                        elements.playerContainer.requestFullscreen();
+                    if (document.documentElement.requestFullscreen) {
+                        document.documentElement.requestFullscreen();
                     }
                 }
             });
