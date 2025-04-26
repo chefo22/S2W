@@ -337,10 +337,16 @@
             background: var(--danger);
         }
 
+        .channel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
         .channel-time {
             font-size: 0.75rem;
             color: var(--text-light);
-            margin-bottom: 0.4rem;
             display: flex;
             align-items: center;
             gap: 5px;
@@ -364,23 +370,24 @@
 
         .channel-name {
             font-weight: 600;
-            margin-bottom: 0.4rem;
             line-height: 1.3;
             color: var(--text-dark);
             font-size: 0.95rem;
+            text-align: center;
+            flex-grow: 1;
+            padding: 0 0.5rem;
         }
 
         .channel-number {
             font-size: 0.75rem;
             color: var(--primary);
             font-weight: 600;
-            margin-top: 0.4rem;
         }
 
         .channel-event {
             font-size: 0.8rem;
             color: var(--text-light);
-            margin-top: 0.4rem;
+            margin-top: 0.5rem;
         }
 
         .floating-buttons {
@@ -675,32 +682,23 @@
             cancelFavoriteBtn: document.getElementById('cancelFavoriteBtn')
         };
 
-        // Inicialización inmediata
         function init() {
             if (state.isDarkMode) {
                 document.body.classList.add('dark-mode');
                 elements.darkModeBtn.textContent = '☀️';
             }
 
-            // Cargar favoritos desde localStorage
             state.favorites = JSON.parse(localStorage.getItem('daddyliveFavorites')) || [];
-            
-            // Configurar event listeners inmediatamente
             setupEventListeners();
-            
-            // Cargar canales en segundo plano
             loadChannels();
         }
 
-        // Función optimizada para cargar canales sin bloquear la UI
         function loadChannels() {
             state.isLoading = true;
             updateSystemStatus('loading');
             
-            // Mostrar estado de carga pero permitir interacción
             elements.channelsGrid.innerHTML = '<div class="loading-placeholder"><p>Cargando canales...</p></div>';
             
-            // Usar setTimeout para permitir que la UI se actualice primero
             setTimeout(() => {
                 const targetUrl = 'https://daddylivehd1.click/';
                 const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
@@ -721,7 +719,6 @@
                     .catch(error => {
                         console.error('Error:', error);
                         updateSystemStatus('unstable');
-                        // Mostrar error pero permitir continuar usando la aplicación
                         elements.channelsGrid.innerHTML = '<p class="no-results">Error al cargar canales. Puedes intentar buscar canales manualmente.</p>';
                     })
                     .finally(() => {
@@ -795,12 +792,14 @@
                 channelCard.dataset.id = channel.number;
                 
                 channelCard.innerHTML = `
-                    <div class="channel-time ${channel.time ? 'live' : ''}">
-                        ${channel.time || 'LIVE'}
+                    <div class="channel-header">
+                        <div class="channel-time ${channel.time ? 'live' : ''}">
+                            ${channel.time || 'LIVE'}
+                        </div>
+                        <h3 class="channel-name">${channel.name}</h3>
+                        <div class="channel-number">CH-${channel.number}</div>
                     </div>
-                    <h3 class="channel-name">${channel.name}</h3>
                     <p class="channel-event">${channel.event}</p>
-                    <div class="channel-number">CH-${channel.number}</div>
                 `;
                 
                 channelCard.addEventListener('click', () => playChannel(channel));
@@ -1019,7 +1018,6 @@
         }
 
         function setupEventListeners() {
-            // Filtros
             elements.filterAll.addEventListener('click', () => {
                 state.currentFilter = 'all';
                 elements.filterAll.classList.add('active');
@@ -1044,7 +1042,6 @@
                 renderChannels();
             });
             
-            // Búsqueda
             elements.searchInput.addEventListener('input', () => {
                 renderChannels();
             });
@@ -1060,7 +1057,6 @@
                         if (channel) {
                             playChannel(channel);
                         } else {
-                            // Permitir reproducir canales incluso si no están cargados
                             let url, nombre;
                             
                             if (state.s2Toggle) {
@@ -1087,10 +1083,8 @@
                 }
             });
             
-            // Modo oscuro
             elements.darkModeBtn.addEventListener('click', toggleDarkMode);
             
-            // Controles del reproductor
             elements.closePlayerBtn.addEventListener('click', closePlayer);
             
             elements.favoriteBtn.addEventListener('click', () => {
@@ -1111,7 +1105,6 @@
             
             elements.channelListBtn.addEventListener('click', showChannelList);
             
-            // Pantalla completa
             elements.fullscreenBtn.addEventListener('click', () => {
                 if (document.fullscreenElement) {
                     document.exitFullscreen();
@@ -1120,13 +1113,11 @@
                 }
             });
             
-            // Modal de lista de canales
             elements.closeChannelListBtn.addEventListener('click', hideChannelList);
             elements.channelListSearch.addEventListener('input', () => {
                 showChannelList();
             });
             
-            // Modal de favoritos
             elements.saveFavoriteBtn.addEventListener('click', saveFavorite);
             elements.cancelFavoriteBtn.addEventListener('click', hideFavoriteModal);
         }
@@ -1149,7 +1140,6 @@
             }
         }
 
-        // Iniciar la aplicación inmediatamente
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
