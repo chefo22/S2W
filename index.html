@@ -742,7 +742,17 @@
                 const strongElements = doc.querySelectorAll('strong');
                 
                 strongElements.forEach(strong => {
-                    const eventText = strong.childNodes[0]?.textContent.trim() || '';
+                    let eventText = strong.childNodes[0]?.textContent.trim() || '';
+                    const timeMatch = eventText.match(timeRegex);
+                    let adjustedTime = '';
+                    
+                    // Ajustar la hora si se encuentra
+                    if (timeMatch) {
+                        const [hours, minutes] = timeMatch[1].split(':').map(Number);
+                        const adjustedHours = (hours + 1) % 24; // Sumar 1 hora y asegurar que no pase de 23
+                        adjustedTime = `${String(adjustedHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                        eventText = eventText.replace(timeMatch[1], adjustedTime);
+                    }
                     
                     const links = strong.querySelectorAll('a');
                     links.forEach(link => {
@@ -756,7 +766,7 @@
                             channels.push({
                                 name: channelName,
                                 number: channelNumber,
-                                time: eventText.match(timeRegex)?.[1] || '',
+                                time: adjustedTime || '',
                                 event: eventText.replace(timeRegex, '').trim(),
                                 url: link.href,
                                 rawText: linkText,
