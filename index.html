@@ -217,21 +217,6 @@
             font-size: 0.8rem;
         }
 
-        .health-indicator {
-            height: 3px;
-            background: rgba(0,0,0,0.1);
-            border-radius: 2px;
-            overflow: hidden;
-            width: 80px;
-        }
-
-        .health-bar {
-            height: 100%;
-            background: var(--success);
-            width: 100%;
-            transition: width 0.3s, background-color 0.3s;
-        }
-
         .search-filters {
             background: var(--card-bg);
             border-radius: var(--radius-md);
@@ -562,16 +547,8 @@
             <div class="player-controls">
                 <div class="control-group">
                     <button class="control-btn" title="Guardar favorito" id="favoriteBtn">★</button>
-                    <button class="control-btn" title="Pantalla completa" id="playerFullscreenBtn">⛶</button>
                     <button class="control-btn" title="Lista de canales" id="channelListBtn">≡</button>
                     <button class="control-btn" title="Cerrar" id="closePlayerBtn">×</button>
-                </div>
-                
-                <div class="control-group">
-                    <span id="connectionStatus">Sin conexión</span>
-                    <div class="health-indicator">
-                        <div class="health-bar" id="healthBar"></div>
-                    </div>
                 </div>
             </div>
         </section>
@@ -662,11 +639,8 @@
             filterLive: document.getElementById('filterLive'),
             filterFavorites: document.getElementById('filterFavorites'),
             favoriteBtn: document.getElementById('favoriteBtn'),
-            playerFullscreenBtn: document.getElementById('playerFullscreenBtn'),
             channelListBtn: document.getElementById('channelListBtn'),
             closePlayerBtn: document.getElementById('closePlayerBtn'),
-            connectionStatus: document.getElementById('connectionStatus'),
-            healthBar: document.getElementById('healthBar'),
             loading: document.getElementById('loading'),
             darkModeBtn: document.getElementById('darkModeBtn'),
             fullscreenBtn: document.getElementById('fullscreenBtn'),
@@ -746,10 +720,9 @@
                     const timeMatch = eventText.match(timeRegex);
                     let adjustedTime = '';
                     
-                    // Ajustar la hora si se encuentra
                     if (timeMatch) {
                         const [hours, minutes] = timeMatch[1].split(':').map(Number);
-                        const adjustedHours = (hours + 1) % 24; // Sumar 1 hora y asegurar que no pase de 23
+                        const adjustedHours = (hours + 1) % 24;
                         adjustedTime = `${String(adjustedHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
                         eventText = eventText.replace(timeMatch[1], adjustedTime);
                     }
@@ -863,9 +836,6 @@
             elements.playerContainer.classList.add('active');
             state.playerVisible = true;
             
-            elements.connectionStatus.textContent = "Conectando...";
-            elements.healthBar.style.width = "0%";
-            
             const streamUrl = state.s2Toggle 
                 ? `https://stream2wetch.top/embed/stream-${channel.number}.php`
                 : channel.url;
@@ -873,31 +843,6 @@
             elements.videoFrame.src = streamUrl;
             
             elements.favoriteBtn.classList.toggle('active', channel.isFavorite);
-            
-            startHealthMonitoring();
-        }
-
-        function startHealthMonitoring() {
-            if (state.healthCheckInterval) {
-                clearInterval(state.healthCheckInterval);
-            }
-            
-            state.healthCheckInterval = setInterval(() => {
-                const isHealthy = Math.random() > 0.2;
-                
-                if (isHealthy) {
-                    const randomQuality = Math.floor(Math.random() * 30) + 70;
-                    elements.healthBar.style.width = `${randomQuality}%`;
-                    elements.healthBar.style.backgroundColor = getQualityColor(randomQuality);
-                    elements.connectionStatus.textContent = 
-                        randomQuality > 85 ? "Excelente" : 
-                        randomQuality > 60 ? "Buena" : "Aceptable";
-                } else {
-                    elements.healthBar.style.width = `${Math.floor(Math.random() * 30)}%`;
-                    elements.healthBar.style.backgroundColor = 'var(--danger)';
-                    elements.connectionStatus.textContent = "Inestable";
-                }
-            }, 5000);
         }
 
         function showChannelList() {
@@ -1009,12 +954,6 @@
             }
         }
 
-        function getQualityColor(quality) {
-            if (quality >= 80) return 'var(--success)';
-            if (quality >= 50) return 'var(--warning)';
-            return 'var(--danger)';
-        }
-
         function updateSystemStatus(status) {
             const statusMap = {
                 'loading': { text: 'Cargando...', class: 'warning' },
@@ -1104,12 +1043,6 @@
                     removeFavorite();
                 } else {
                     showFavoriteModal();
-                }
-            });
-            
-            elements.playerFullscreenBtn.addEventListener('click', () => {
-                if (elements.playerContainer.requestFullscreen) {
-                    elements.playerContainer.requestFullscreen();
                 }
             });
             
