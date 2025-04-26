@@ -383,20 +383,6 @@
             margin-top: 0.4rem;
         }
 
-        .channel-quality {
-            height: 3px;
-            background: var(--border-color);
-            border-radius: 2px;
-            margin-top: 0.8rem;
-            overflow: hidden;
-        }
-
-        .quality-bar {
-            height: 100%;
-            background: var(--success);
-            width: 100%;
-        }
-
         .floating-buttons {
             position: fixed;
             bottom: 15px;
@@ -793,9 +779,6 @@
                     <h3 class="channel-name">${channel.name}</h3>
                     <p class="channel-event">${channel.event}</p>
                     <div class="channel-number">CH-${channel.number}</div>
-                    <div class="channel-quality">
-                        <div class="quality-bar" style="width: 100%;"></div>
-                    </div>
                 `;
                 
                 channelCard.addEventListener('click', () => playChannel(channel));
