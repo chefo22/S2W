@@ -2,21 +2,21 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>DaddyLive TV | Transmisiones Deportivas en Directo</title>
     <style>
         :root {
-            --primary: #2563eb;       /* Azul vibrante */
-            --primary-dark: #1e50c7;  /* Azul oscuro */
-            --danger: #dc2626;        /* Rojo */
-            --success: #16a34a;       /* Verde */
-            --warning: #d97706;       /* Naranja */
-            --bg-dark: #0f172a;      /* Fondo oscuro */
-            --bg-light: #f1f5f9;     /* Fondo claro */
-            --card-bg: #ffffff;      /* Fondo tarjetas */
-            --text-dark: #1e293b;     /* Texto oscuro */
-            --text-light: #64748b;    /* Texto secundario */
-            --border-color: #e2e8f0;  /* Color bordes */
+            --primary: #2563eb;
+            --primary-dark: #1e50c7;
+            --danger: #dc2626;
+            --success: #16a34a;
+            --warning: #d97706;
+            --bg-dark: #0f172a;
+            --bg-light: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --border-color: #e2e8f0;
             --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
             --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
             --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
@@ -45,9 +45,9 @@
             color: var(--text-dark);
             line-height: 1.6;
             transition: background-color 0.3s ease, color 0.3s ease;
+            font-size: 14px;
         }
 
-        /* Header */
         .header {
             background: var(--primary);
             color: white;
@@ -58,10 +58,11 @@
             box-shadow: var(--shadow-md);
             position: relative;
             z-index: 10;
+            order: 1;
         }
 
         .logo {
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             font-weight: 700;
             display: flex;
             align-items: center;
@@ -69,8 +70,8 @@
         }
 
         .logo-icon {
-            width: 30px;
-            height: 30px;
+            width: 25px;
+            height: 25px;
             background-color: white;
             border-radius: 50%;
             display: inline-flex;
@@ -83,13 +84,13 @@
         .header-actions {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 10px;
         }
 
         .status-badge {
-            padding: 0.3rem 0.8rem;
+            padding: 0.3rem 0.6rem;
             border-radius: 20px;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             font-weight: 600;
             background-color: var(--success);
             color: white;
@@ -104,21 +105,21 @@
         }
 
         .channel-count {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             color: white;
             opacity: 0.8;
         }
 
-        /* Main Layout */
         .main-container {
             max-width: 1400px;
-            margin: 2rem auto;
-            padding: 0 2rem;
+            margin: 1rem auto;
+            padding: 0 1rem;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Player Section - Modificado para full size */
         .player-section {
-            margin-bottom: 2rem;
+            margin-bottom: 1rem;
             position: relative;
         }
 
@@ -129,7 +130,7 @@
             box-shadow: var(--shadow-lg);
             aspect-ratio: 16/9;
             position: relative;
-            display: none; /* Hidden by default */
+            display: none;
             width: 100%;
             height: 100%;
         }
@@ -148,7 +149,6 @@
             border: none;
         }
 
-        /* Si el iframe contiene un elemento <video> */
         #videoFrame video {
             object-fit: cover;
             width: 100%;
@@ -162,7 +162,7 @@
 
         .player-controls {
             background: rgba(0,0,0,0.7);
-            padding: 0.8rem 1rem;
+            padding: 0.6rem 0.8rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -175,7 +175,7 @@
 
         .control-group {
             display: flex;
-            gap: 15px;
+            gap: 10px;
             align-items: center;
         }
 
@@ -184,10 +184,10 @@
             border: none;
             color: white;
             cursor: pointer;
-            font-size: 1.1rem;
+            font-size: 1rem;
             transition: all 0.2s;
-            width: 36px;
-            height: 36px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -203,19 +203,20 @@
         }
 
         .quality-selector {
-            padding: 0.3rem 0.6rem;
+            padding: 0.2rem 0.4rem;
             border-radius: var(--radius-sm);
             background: rgba(255,255,255,0.2);
             border: 1px solid rgba(255,255,255,0.3);
             color: white;
+            font-size: 0.8rem;
         }
 
         .health-indicator {
-            height: 4px;
+            height: 3px;
             background: rgba(255,255,255,0.2);
             border-radius: 2px;
             overflow: hidden;
-            width: 100px;
+            width: 80px;
         }
 
         .health-bar {
@@ -225,27 +226,26 @@
             transition: width 0.3s, background-color 0.3s;
         }
 
-        /* Search and Filters */
         .search-filters {
             background: var(--card-bg);
             border-radius: var(--radius-md);
-            padding: 1.5rem;
-            margin-bottom: 2rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
             box-shadow: var(--shadow-sm);
             transition: background-color 0.3s ease;
         }
 
         .search-box {
             position: relative;
-            margin-bottom: 1rem;
+            margin-bottom: 0.8rem;
         }
 
         #searchInput {
             width: 100%;
-            padding: 0.8rem 1rem 0.8rem 2.5rem;
+            padding: 0.6rem 1rem 0.6rem 2.2rem;
             border: 1px solid var(--border-color);
             border-radius: var(--radius-sm);
-            font-size: 1rem;
+            font-size: 0.9rem;
             background-color: var(--card-bg);
             color: var(--text-dark);
             transition: all 0.3s ease;
@@ -259,27 +259,28 @@
 
         .search-icon {
             position: absolute;
-            left: 1rem;
+            left: 0.8rem;
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-light);
+            font-size: 0.9rem;
         }
 
         .filter-buttons {
             display: flex;
-            gap: 0.8rem;
-            margin-top: 1rem;
+            gap: 0.6rem;
+            margin-top: 0.8rem;
         }
 
         .filter-button {
             flex: 1;
-            padding: 0.6rem;
+            padding: 0.5rem;
             border: 1px solid var(--border-color);
             border-radius: var(--radius-sm);
             background: var(--card-bg);
             color: var(--text-dark);
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             font-weight: 500;
             transition: all 0.2s;
         }
@@ -294,19 +295,18 @@
             border-color: var(--primary);
         }
 
-        /* Channels Grid */
         .channels-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.2rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
         }
 
         .channel-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-md);
-            padding: 1.2rem;
+            padding: 1rem;
             transition: all 0.2s;
             cursor: pointer;
             position: relative;
@@ -332,9 +332,9 @@
         }
 
         .channel-time {
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             color: var(--text-light);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
             display: flex;
             align-items: center;
             gap: 5px;
@@ -343,8 +343,8 @@
         .channel-time.live::before {
             content: "";
             display: inline-block;
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             background-color: var(--danger);
             animation: pulse 1.5s infinite;
@@ -358,29 +358,30 @@
 
         .channel-name {
             font-weight: 600;
-            margin-bottom: 0.5rem;
-            line-height: 1.4;
+            margin-bottom: 0.4rem;
+            line-height: 1.3;
             color: var(--text-dark);
+            font-size: 0.95rem;
         }
 
         .channel-number {
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             color: var(--primary);
             font-weight: 600;
-            margin-top: 0.5rem;
+            margin-top: 0.4rem;
         }
 
         .channel-event {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             color: var(--text-light);
-            margin-top: 0.5rem;
+            margin-top: 0.4rem;
         }
 
         .channel-quality {
-            height: 4px;
+            height: 3px;
             background: var(--border-color);
             border-radius: 2px;
-            margin-top: 1rem;
+            margin-top: 0.8rem;
             overflow: hidden;
         }
 
@@ -390,27 +391,26 @@
             width: 100%;
         }
 
-        /* Floating Buttons */
         .floating-buttons {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            bottom: 15px;
+            right: 15px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 12px;
             z-index: 100;
         }
 
         .floating-btn {
-            width: 50px;
-            height: 50px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
             border: none;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             box-shadow: var(--shadow-md);
             transition: all 0.2s;
         }
@@ -429,7 +429,6 @@
             color: white;
         }
 
-        /* Loading */
         .loading {
             position: fixed;
             top: 0;
@@ -448,9 +447,9 @@
         }
 
         .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid rgba(255,255,255,0.3);
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.3);
             border-radius: 50%;
             border-top-color: var(--primary);
             animation: spin 1s ease-in-out infinite;
@@ -460,7 +459,6 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Modal */
         .modal {
             position: fixed;
             top: 0;
@@ -477,39 +475,42 @@
         .modal-content {
             background: var(--card-bg);
             border-radius: var(--radius-md);
-            padding: 1.5rem;
+            padding: 1.2rem;
             width: 90%;
-            max-width: 400px;
+            max-width: 350px;
             box-shadow: var(--shadow-lg);
         }
 
         .modal-title {
-            margin-bottom: 1rem;
+            margin-bottom: 0.8rem;
             color: var(--text-dark);
+            font-size: 1.1rem;
         }
 
         .modal-input {
             width: 100%;
-            padding: 0.8rem;
-            margin-bottom: 1rem;
+            padding: 0.7rem;
+            margin-bottom: 0.8rem;
             border: 1px solid var(--border-color);
             border-radius: var(--radius-sm);
             background: var(--card-bg);
             color: var(--text-dark);
+            font-size: 0.9rem;
         }
 
         .modal-actions {
             display: flex;
             justify-content: flex-end;
-            gap: 0.8rem;
+            gap: 0.6rem;
         }
 
         .modal-btn {
-            padding: 0.6rem 1rem;
+            padding: 0.5rem 0.8rem;
             border: none;
             border-radius: var(--radius-sm);
             cursor: pointer;
             font-weight: 500;
+            font-size: 0.9rem;
         }
 
         .modal-btn-primary {
@@ -522,22 +523,21 @@
             color: var(--text-dark);
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
-                gap: 10px;
-                padding: 1rem;
+                gap: 8px;
+                padding: 0.8rem;
                 text-align: center;
             }
 
             .header-actions {
                 flex-direction: column;
-                gap: 8px;
+                gap: 6px;
             }
 
             .main-container {
-                padding: 0 1rem;
+                padding: 0 0.8rem;
             }
 
             .channels-grid {
@@ -549,26 +549,13 @@
             }
 
             .filter-button {
-                min-width: calc(50% - 0.4rem);
+                min-width: calc(50% - 0.3rem);
             }
         }
     </style>
 </head>
 <body>
-    <header class="header">
-        <div class="logo">
-            <span class="logo-icon">DL</span>
-            <span>DaddyLive TV</span>
-        </div>
-        <div class="header-actions">
-            <span>Estado:</span>
-            <span class="status-badge">Operativo</span>
-            <span class="channel-count" id="channelCount">0 canales</span>
-        </div>
-    </header>
-
     <main class="main-container">
-        <!-- Player Section (Hidden by default) -->
         <section class="player-section">
             <div class="player-container" id="playerContainer">
                 <iframe id="videoFrame" src="about:blank" allowfullscreen></iframe>
@@ -591,7 +578,6 @@
             </div>
         </section>
 
-        <!-- Search and Filters -->
         <section class="search-filters">
             <div class="search-box">
                 <span class="search-icon">🔍</span>
@@ -605,19 +591,27 @@
             </div>
         </section>
 
-        <!-- Channels Grid -->
         <section class="channels-grid" id="channelsGrid">
-            <!-- Channels will be dynamically inserted here -->
         </section>
     </main>
 
-    <!-- Channel List Sidebar -->
+    <header class="header">
+        <div class="logo">
+            <span class="logo-icon">DL</span>
+            <span>DaddyLive TV</span>
+        </div>
+        <div class="header-actions">
+            <span>Estado:</span>
+            <span class="status-badge">Operativo</span>
+            <span class="channel-count" id="channelCount">0 canales</span>
+        </div>
+    </header>
+
     <div class="modal" id="channelListModal">
         <div class="modal-content">
             <h3 class="modal-title">Lista de Canales</h3>
             <input type="text" class="modal-input" id="channelListSearch" placeholder="Buscar canales...">
-            <div id="channelListContent" style="max-height: 400px; overflow-y: auto; margin-bottom: 1rem;">
-                <!-- Channel list will be inserted here -->
+            <div id="channelListContent" style="max-height: 350px; overflow-y: auto; margin-bottom: 0.8rem;">
             </div>
             <div class="modal-actions">
                 <button class="modal-btn modal-btn-secondary" id="closeChannelListBtn">Cerrar</button>
@@ -625,7 +619,6 @@
         </div>
     </div>
 
-    <!-- Favorite Modal -->
     <div class="modal" id="favoriteModal">
         <div class="modal-content">
             <h3 class="modal-title">Guardar Favorito</h3>
@@ -637,19 +630,16 @@
         </div>
     </div>
 
-    <!-- Floating Buttons -->
     <div class="floating-buttons">
         <button class="floating-btn dark-mode-btn" id="darkModeBtn">🌙</button>
         <button class="floating-btn fullscreen-btn" id="fullscreenBtn">⛶</button>
     </div>
 
-    <!-- Loading Overlay -->
     <div class="loading" id="loading">
         <div class="spinner"></div>
     </div>
 
     <script>
-        // Estado de la aplicación
         const state = {
             channels: [],
             favorites: JSON.parse(localStorage.getItem('daddyliveFavorites')) || [],
@@ -661,7 +651,6 @@
             s2Toggle: true
         };
 
-        // Elementos del DOM
         const elements = {
             playerContainer: document.getElementById('playerContainer'),
             videoFrame: document.getElementById('videoFrame'),
@@ -691,22 +680,16 @@
             cancelFavoriteBtn: document.getElementById('cancelFavoriteBtn')
         };
 
-        // Inicialización
         function init() {
-            // Cargar modo oscuro
             if (state.isDarkMode) {
                 document.body.classList.add('dark-mode');
                 elements.darkModeBtn.textContent = '☀️';
             }
 
-            // Cargar canales
             loadChannels();
-
-            // Event listeners
             setupEventListeners();
         }
 
-        // Cargar canales
         function loadChannels() {
             showLoading();
             
@@ -723,7 +706,7 @@
                         state.channels = extractChannels(data.contents);
                         renderChannels();
                         updateSystemStatus('healthy');
-                        updateChannelCount(); // Actualizar contador de canales
+                        updateChannelCount();
                     }
                 })
                 .catch(error => {
@@ -736,13 +719,11 @@
                 });
         }
 
-        // Actualizar contador de canales
         function updateChannelCount() {
             const count = state.channels.length;
             elements.channelCount.textContent = `${count} canales`;
         }
 
-        // Extraer canales del HTML
         function extractChannels(htmlContent) {
             try {
                 const parser = new DOMParser();
@@ -785,7 +766,6 @@
             }
         }
 
-        // Renderizar canales
         function renderChannels() {
             elements.channelsGrid.innerHTML = '';
             
@@ -819,12 +799,10 @@
             });
         }
 
-        // Filtrar canales
         function filterChannels() {
             let filtered = [...state.channels];
             const searchTerm = elements.searchInput.value.toLowerCase();
             
-            // Aplicar filtro de búsqueda
             if (searchTerm) {
                 if (/^#?\d+$/.test(searchTerm)) {
                     const channelNumber = searchTerm.replace('#', '');
@@ -838,7 +816,6 @@
                 }
             }
             
-            // Aplicar filtro seleccionado
             switch (state.currentFilter) {
                 case 'live':
                     const now = new Date();
@@ -861,45 +838,36 @@
             return filtered;
         }
 
-        // Reproducir canal
         function playChannel(channel) {
             state.currentStream = channel;
             
-            // Mostrar player
             elements.playerContainer.classList.add('active');
             state.playerVisible = true;
             
-            // Actualizar UI
             elements.connectionStatus.textContent = "Conectando...";
             elements.healthBar.style.width = "0%";
             
-            // URL del stream
             const streamUrl = state.s2Toggle 
                 ? `https://stream2wetch.top/embed/stream-${channel.number}.php`
                 : channel.url;
             
             elements.videoFrame.src = streamUrl;
             
-            // Actualizar botón de favoritos
             elements.favoriteBtn.classList.toggle('active', channel.isFavorite);
             
-            // Iniciar monitoreo de salud
             startHealthMonitoring();
         }
 
-        // Monitorear salud del stream
         function startHealthMonitoring() {
-            // Limpiar intervalo anterior
             if (state.healthCheckInterval) {
                 clearInterval(state.healthCheckInterval);
             }
             
-            // Simular chequeos periódicos de salud
             state.healthCheckInterval = setInterval(() => {
-                const isHealthy = Math.random() > 0.2; // 80% de probabilidad de estar saludable
+                const isHealthy = Math.random() > 0.2;
                 
                 if (isHealthy) {
-                    const randomQuality = Math.floor(Math.random() * 30) + 70; // 70-100%
+                    const randomQuality = Math.floor(Math.random() * 30) + 70;
                     elements.healthBar.style.width = `${randomQuality}%`;
                     elements.healthBar.style.backgroundColor = getQualityColor(randomQuality);
                     elements.connectionStatus.textContent = 
@@ -913,7 +881,6 @@
             }, 5000);
         }
 
-        // Mostrar lista de canales
         function showChannelList() {
             elements.channelListContent.innerHTML = '';
             
@@ -952,24 +919,20 @@
             elements.channelListModal.style.display = 'flex';
         }
 
-        // Ocultar lista de canales
         function hideChannelList() {
             elements.channelListModal.style.display = 'none';
         }
 
-        // Mostrar modal de favorito
         function showFavoriteModal() {
             if (!state.currentStream) return;
             elements.favoriteNameInput.value = state.currentStream.name;
             elements.favoriteModal.style.display = 'flex';
         }
 
-        // Ocultar modal de favorito
         function hideFavoriteModal() {
             elements.favoriteModal.style.display = 'none';
         }
 
-        // Guardar favorito
         function saveFavorite() {
             const favoriteName = elements.favoriteNameInput.value.trim();
             if (!favoriteName) {
@@ -982,7 +945,6 @@
             const existingIndex = state.favorites.findIndex(f => f.number === state.currentStream.number);
             
             if (existingIndex === -1) {
-                // Nuevo favorito
                 state.favorites.push({
                     name: favoriteName,
                     number: state.currentStream.number,
@@ -990,23 +952,18 @@
                     originalName: state.currentStream.name
                 });
             } else {
-                // Actualizar favorito existente
                 state.favorites[existingIndex].name = favoriteName;
             }
             
-            // Actualizar estado
             const channelIndex = state.channels.findIndex(c => c.number === state.currentStream.number);
             if (channelIndex !== -1) {
                 state.channels[channelIndex].isFavorite = true;
             }
             
-            // Guardar en localStorage
             localStorage.setItem('daddyliveFavorites', JSON.stringify(state.favorites));
             
-            // Actualizar UI
             elements.favoriteBtn.classList.add('active');
             
-            // Si estamos en el filtro de favoritos, actualizar la lista
             if (state.currentFilter === 'favorites') {
                 renderChannels();
             }
@@ -1014,38 +971,31 @@
             hideFavoriteModal();
         }
 
-        // Eliminar favorito
         function removeFavorite() {
             if (!state.currentStream) return;
             
             state.favorites = state.favorites.filter(f => f.number !== state.currentStream.number);
             
-            // Actualizar estado
             const channelIndex = state.channels.findIndex(c => c.number === state.currentStream.number);
             if (channelIndex !== -1) {
                 state.channels[channelIndex].isFavorite = false;
             }
             
-            // Guardar en localStorage
             localStorage.setItem('daddyliveFavorites', JSON.stringify(state.favorites));
             
-            // Actualizar UI
             elements.favoriteBtn.classList.remove('active');
             
-            // Si estamos en el filtro de favoritos, actualizar la lista
             if (state.currentFilter === 'favorites') {
                 renderChannels();
             }
         }
 
-        // Obtener color según calidad
         function getQualityColor(quality) {
             if (quality >= 80) return 'var(--success)';
             if (quality >= 50) return 'var(--warning)';
             return 'var(--danger)';
         }
 
-        // Actualizar estado del sistema
         function updateSystemStatus(status) {
             const statusMap = {
                 'healthy': { text: 'Operativo', class: '' },
@@ -1057,9 +1007,7 @@
             elements.statusBadge.className = 'status-badge ' + statusMap[status].class;
         }
 
-        // Configurar event listeners
         function setupEventListeners() {
-            // Filtros
             elements.filterAll.addEventListener('click', () => {
                 state.currentFilter = 'all';
                 elements.filterAll.classList.add('active');
@@ -1084,7 +1032,6 @@
                 renderChannels();
             });
             
-            // Búsqueda
             elements.searchInput.addEventListener('input', () => {
                 renderChannels();
             });
@@ -1100,7 +1047,6 @@
                         if (channel) {
                             playChannel(channel);
                         } else {
-                            // Intentar cargar directamente
                             let url, nombre;
                             
                             if (state.s2Toggle) {
@@ -1127,10 +1073,8 @@
                 }
             });
             
-            // Modo oscuro
             elements.darkModeBtn.addEventListener('click', toggleDarkMode);
             
-            // Controles del player
             elements.closePlayerBtn.addEventListener('click', closePlayer);
             
             elements.favoriteBtn.addEventListener('click', () => {
@@ -1146,9 +1090,9 @@
             elements.playerFullscreenBtn.addEventListener('click', () => {
                 if (elements.playerContainer.requestFullscreen) {
                     elements.playerContainer.requestFullscreen();
-                } else if (elements.playerContainer.webkitRequestFullscreen) { /* Safari */
+                } else if (elements.playerContainer.webkitRequestFullscreen) {
                     elements.playerContainer.webkitRequestFullscreen();
-                } else if (elements.playerContainer.msRequestFullscreen) { /* IE11 */
+                } else if (elements.playerContainer.msRequestFullscreen) {
                     elements.playerContainer.msRequestFullscreen();
                 }
             });
@@ -1167,18 +1111,15 @@
                 }
             });
             
-            // Lista de canales
             elements.closeChannelListBtn.addEventListener('click', hideChannelList);
             elements.channelListSearch.addEventListener('input', () => {
-                showChannelList(); // Se regenera la lista con el filtro
+                showChannelList();
             });
             
-            // Modal de favorito
             elements.saveFavoriteBtn.addEventListener('click', saveFavorite);
             elements.cancelFavoriteBtn.addEventListener('click', hideFavoriteModal);
         }
 
-        // Alternar modo oscuro
         function toggleDarkMode() {
             state.isDarkMode = !state.isDarkMode;
             document.body.classList.toggle('dark-mode', state.isDarkMode);
@@ -1186,35 +1127,29 @@
             localStorage.setItem('darkMode', state.isDarkMode);
         }
 
-        // Cerrar player
         function closePlayer() {
             elements.playerContainer.classList.remove('active');
             elements.videoFrame.src = '';
             state.currentStream = null;
             
-            // Limpiar monitoreo de salud
             if (state.healthCheckInterval) {
                 clearInterval(state.healthCheckInterval);
                 state.healthCheckInterval = null;
             }
         }
 
-        // Mostrar loading
         function showLoading() {
             elements.loading.classList.add('active');
         }
 
-        // Ocultar loading
         function hideLoading() {
             elements.loading.classList.remove('active');
         }
 
-        // Mostrar error
         function showError(message) {
-            alert(message); // En producción podrías usar un toast o modal más elegante
+            alert(message);
         }
 
-        // Inicializar la aplicación
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
