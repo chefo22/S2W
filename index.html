@@ -161,51 +161,44 @@
         }
 
         .player-controls {
-            background: var(--card-bg);
-            padding: 0.6rem 0.8rem;
+            position: absolute;
+            left: 20px;
+            bottom: 20px;
             display: none;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            color: var(--text-dark);
-            border: 1px solid var(--border-color);
-            border-top: none;
-            border-radius: 0 0 var(--radius-md) var(--radius-md);
-            box-shadow: var(--shadow-sm);
+            gap: 15px;
+            z-index: 20;
         }
 
         .player-container.active + .player-controls {
             display: flex;
         }
 
-        .control-group {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
         .control-btn {
-            background: none;
+            background: rgba(0, 0, 0, 0.6);
             border: none;
-            color: var(--text-dark);
+            color: white;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 1.3rem;
             transition: all 0.2s;
-            width: 30px;
-            height: 30px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
 
         .control-btn:hover {
-            background: rgba(0,0,0,0.1);
+            background: rgba(0, 0, 0, 0.8);
+            transform: scale(1.1);
         }
 
         .control-btn.active {
             background: var(--primary);
             color: white;
+            transform: scale(1.1);
         }
 
         .quality-selector {
@@ -535,6 +528,18 @@
             .filter-button {
                 min-width: calc(50% - 0.3rem);
             }
+
+            .control-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 1.2rem;
+            }
+
+            .player-controls {
+                left: 10px;
+                bottom: 10px;
+                gap: 10px;
+            }
         }
     </style>
 </head>
@@ -545,11 +550,9 @@
                 <iframe id="videoFrame" src="about:blank" allowfullscreen></iframe>
             </div>
             <div class="player-controls">
-                <div class="control-group">
-                    <button class="control-btn" title="Guardar favorito" id="favoriteBtn">★</button>
-                    <button class="control-btn" title="Lista de canales" id="channelListBtn">≡</button>
-                    <button class="control-btn" title="Cerrar" id="closePlayerBtn">×</button>
-                </div>
+                <button class="control-btn" title="Guardar favorito" id="favoriteBtn">★</button>
+                <button class="control-btn" title="Lista de canales" id="channelListBtn">≡</button>
+                <button class="control-btn" title="Cerrar" id="closePlayerBtn">×</button>
             </div>
         </section>
 
@@ -786,10 +789,8 @@
                     <p class="channel-event">${channel.event}</p>
                 `;
                 
-                // Evento para reproducir al hacer click normal
                 channelCard.addEventListener('click', () => playChannel(channel));
                 
-                // Evento para eliminar favorito al mantener pulsado
                 channelCard.addEventListener('touchstart', (e) => {
                     if (!channel.isFavorite) return;
                     
