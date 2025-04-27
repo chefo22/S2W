@@ -297,6 +297,7 @@
             overflow: hidden;
             box-shadow: var(--shadow-sm);
             transition: all 0.3s ease;
+            min-width: 0;
         }
 
         .channel-card:hover {
@@ -534,7 +535,7 @@
             }
 
             .channels-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr);
             }
 
             .filter-buttons {
@@ -542,7 +543,7 @@
             }
 
             .filter-button {
-                min-width: calc(50% - 0.3rem);
+                min-width: calc(33.33% - 0.4rem);
             }
 
             .control-btn {
@@ -555,6 +556,10 @@
                 left: 10px;
                 bottom: 10px;
                 gap: 8px;
+            }
+
+            .channel-card {
+                padding: 0.8rem;
             }
         }
     </style>
@@ -923,8 +928,6 @@
                 : channel.url;
             
             elements.videoFrame.src = streamUrl;
-            
-            elements.favoriteBtn.classList.toggle('active', channel.isFavorite);
         }
 
         function showChannelList() {
@@ -1051,7 +1054,6 @@
             }
             
             localStorage.setItem('daddyliveFavorites', JSON.stringify(state.favorites));
-            elements.favoriteBtn.classList.add('active');
             
             if (state.currentFilter === 'favorites') {
                 renderChannels();
@@ -1072,10 +1074,6 @@
             
             if (state.currentFilter === 'favorites') {
                 renderChannels();
-            }
-            
-            if (state.currentStream && state.currentStream.number === channelNumber) {
-                elements.favoriteBtn.classList.remove('active');
             }
         }
 
