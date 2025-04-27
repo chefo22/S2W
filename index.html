@@ -580,7 +580,7 @@
         <section class="search-filters">
             <div class="search-box">
                 <span class="search-icon">🔍</span>
-                <input type="text" id="searchInput" placeholder="Buscar canales o ingresar número (ej: #123)">
+                <input type="text" id="searchInput" placeholder="Buscar canales o ingresar número (ej: 123)">
             </div>
             
             <div class="filter-buttons">
@@ -834,7 +834,7 @@
                             ${channel.time || 'LIVE'}
                         </div>
                         <h3 class="channel-name">${channel.name}</h3>
-                        <div class="channel-number">CH-${channel.number}</div>
+                        <div class="channel-number">${channel.number}</div>
                     </div>
                     <p class="channel-event">${channel.event}</p>
                 `;
@@ -969,7 +969,7 @@
                 channelItem.innerHTML = `
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                         <strong>${channel.name}</strong>
-                        <span>CH-${channel.number}</span>
+                        <span>${channel.number}</span>
                     </div>
                     <div style="font-size: 0.9rem; color: var(--text-light);">
                         ${channel.time || 'LIVE'} ${channel.event}
@@ -995,7 +995,7 @@
                 currentChannelItem.innerHTML = `
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                         <strong>${state.currentStream.name}</strong>
-                        <span>CH-${state.currentStream.number}</span>
+                        <span>${state.currentStream.number}</span>
                     </div>
                     <div style="font-size: 0.9rem; color: var(--text-light);">
                         ${state.currentStream.time || 'LIVE'} ${state.currentStream.event}
@@ -1133,10 +1133,10 @@
                             
                             if (state.s2Toggle) {
                                 url = `https://stream2wetch.top/embed/stream-${channelNumber}.php`;
-                                nombre = `Canal ${channelNumber} (S2Wetch)`;
+                                nombre = `Canal ${channelNumber}`;
                             } else {
                                 url = `https://daddylivehd1.click/channel-${channelNumber}`;
-                                nombre = `Canal ${channelNumber} (DaddyLive)`;
+                                nombre = `Canal ${channelNumber}`;
                             }
                             
                             playChannel({
