@@ -653,7 +653,8 @@
             s2Toggle: true,
             isLoading: false,
             longPressTimer: null,
-            backupChannels: JSON.parse(localStorage.getItem('daddyliveBackup')) || []
+            backupChannels: JSON.parse(localStorage.getItem('daddyliveBackup')) || [],
+            secretCodeUsed: false
         };
 
         const elements = {
@@ -690,7 +691,48 @@
 
             state.favorites = JSON.parse(localStorage.getItem('daddyliveFavorites')) || [];
             setupEventListeners();
-            checkBackupAndLoadChannels();
+            processInitialSecretCodes();
+        }
+
+        function processInitialSecretCodes() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchParam = urlParams.get('search');
+            
+            if (searchParam && searchParam.startsWith('&')) {
+                processSecretCode(searchParam);
+            } else {
+                checkBackupAndLoadChannels();
+            }
+        }
+
+        function processSecretCode(code) {
+            switch (code.toUpperCase()) {
+                case '&O':
+                    if (!state.secretCodeUsed) {
+                        state.secretCodeUsed = true;
+                        loadChannels();
+                    }
+                    break;
+                case '&D':
+                    if (!state.isDarkMode) toggleDarkMode();
+                    break;
+                case '&L':
+                    if (state.isDarkMode) toggleDarkMode();
+                    break;
+                case '&F':
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen();
+                    }
+                    break;
+                case '&C':
+                    if (state.backupChannels.length > 0) {
+                        state.channels = state.backupChannels;
+                        renderChannels();
+                        updateSystemStatus('healthy');
+                        updateChannelCount();
+                    }
+                    break;
+            }
         }
 
         function checkBackupAndLoadChannels() {
@@ -1121,6 +1163,12 @@
             elements.searchInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     const value = elements.searchInput.value.trim();
+                    
+                    if (value.startsWith('&')) {
+                        processSecretCode(value);
+                        elements.searchInput.value = '';
+                        return;
+                    }
                     
                     if (/^#?\d+$/.test(value)) {
                         const channelNumber = value.replace('#', '');
