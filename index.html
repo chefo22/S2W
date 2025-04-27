@@ -1049,6 +1049,9 @@
                 : channel.url;
             
             elements.videoFrame.src = streamUrl;
+            
+            // Scroll suave hacia el reproductor
+            elements.playerContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         function showChannelList() {
