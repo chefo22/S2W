@@ -631,7 +631,8 @@
             healthCheckInterval: null,
             s2Toggle: true,
             isLoading: false,
-            longPressTimer: null
+            longPressTimer: null,
+            backupChannels: JSON.parse(localStorage.getItem('daddyliveBackup')) || []
         };
 
         const elements = {
@@ -668,6 +669,20 @@
 
             state.favorites = JSON.parse(localStorage.getItem('daddyliveFavorites')) || [];
             setupEventListeners();
+            checkBackupAndLoadChannels();
+        }
+
+        function checkBackupAndLoadChannels() {
+            if (state.backupChannels.length > 0) {
+                const useBackup = confirm('¿Quieres usar la copia de seguridad de los canales?');
+                if (useBackup) {
+                    state.channels = state.backupChannels;
+                    renderChannels();
+                    updateSystemStatus('healthy');
+                    updateChannelCount();
+                    return;
+                }
+            }
             loadChannels();
         }
 
@@ -689,6 +704,9 @@
                     .then(data => {
                         if (data.contents) {
                             state.channels = extractChannels(data.contents);
+                            // Guardar copia de seguridad
+                            localStorage.setItem('daddyliveBackup', JSON.stringify(state.channels));
+                            state.backupChannels = state.channels;
                             renderChannels();
                             updateSystemStatus('healthy');
                             updateChannelCount();
@@ -697,7 +715,19 @@
                     .catch(error => {
                         console.error('Error:', error);
                         updateSystemStatus('unstable');
-                        elements.channelsGrid.innerHTML = '<p class="no-results">Error al cargar canales. Puedes intentar buscar canales manualmente.</p>';
+                        if (state.backupChannels.length > 0) {
+                            const useBackup = confirm('Error al cargar canales. ¿Quieres usar la copia de seguridad?');
+                            if (useBackup) {
+                                state.channels = state.backupChannels;
+                                renderChannels();
+                                updateSystemStatus('healthy');
+                                updateChannelCount();
+                            } else {
+                                elements.channelsGrid.innerHTML = '<p class="no-results">Error al cargar canales. Puedes intentar buscar canales manualmente.</p>';
+                            }
+                        } else {
+                            elements.channelsGrid.innerHTML = '<p class="no-results">Error al cargar canales. Puedes intentar buscar canales manualmente.</p>';
+                        }
                     })
                     .finally(() => {
                         state.isLoading = false;
