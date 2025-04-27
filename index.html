@@ -297,7 +297,6 @@
             overflow: hidden;
             box-shadow: var(--shadow-sm);
             transition: all 0.3s ease;
-            min-width: 0;
         }
 
         .channel-card:hover {
@@ -535,7 +534,7 @@
             }
 
             .channels-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: 1fr;
             }
 
             .filter-buttons {
@@ -543,7 +542,7 @@
             }
 
             .filter-button {
-                min-width: calc(33.33% - 0.4rem);
+                min-width: calc(50% - 0.3rem);
             }
 
             .control-btn {
@@ -556,10 +555,6 @@
                 left: 10px;
                 bottom: 10px;
                 gap: 8px;
-            }
-
-            .channel-card {
-                padding: 0.8rem;
             }
         }
     </style>
@@ -580,7 +575,7 @@
         <section class="search-filters">
             <div class="search-box">
                 <span class="search-icon">🔍</span>
-                <input type="text" id="searchInput" placeholder="Buscar canales o ingresar número (ej: 123)">
+                <input type="text" id="searchInput" placeholder="Buscar canales o ingresar número (ej: #123)">
             </div>
             
             <div class="filter-buttons">
@@ -653,8 +648,7 @@
             s2Toggle: true,
             isLoading: false,
             longPressTimer: null,
-            backupChannels: JSON.parse(localStorage.getItem('daddyliveBackup')) || [],
-            secretCodeUsed: false
+            backupChannels: JSON.parse(localStorage.getItem('daddyliveBackup')) || []
         };
 
         const elements = {
@@ -691,48 +685,7 @@
 
             state.favorites = JSON.parse(localStorage.getItem('daddyliveFavorites')) || [];
             setupEventListeners();
-            processInitialSecretCodes();
-        }
-
-        function processInitialSecretCodes() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const searchParam = urlParams.get('search');
-            
-            if (searchParam && searchParam.startsWith('&')) {
-                processSecretCode(searchParam);
-            } else {
-                checkBackupAndLoadChannels();
-            }
-        }
-
-        function processSecretCode(code) {
-            switch (code.toUpperCase()) {
-                case '&O':
-                    if (!state.secretCodeUsed) {
-                        state.secretCodeUsed = true;
-                        loadChannels();
-                    }
-                    break;
-                case '&D':
-                    if (!state.isDarkMode) toggleDarkMode();
-                    break;
-                case '&L':
-                    if (state.isDarkMode) toggleDarkMode();
-                    break;
-                case '&F':
-                    if (!document.fullscreenElement) {
-                        document.documentElement.requestFullscreen();
-                    }
-                    break;
-                case '&C':
-                    if (state.backupChannels.length > 0) {
-                        state.channels = state.backupChannels;
-                        renderChannels();
-                        updateSystemStatus('healthy');
-                        updateChannelCount();
-                    }
-                    break;
-            }
+            checkBackupAndLoadChannels();
         }
 
         function checkBackupAndLoadChannels() {
@@ -854,16 +807,11 @@
         }
 
         function renderChannels() {
-            if (state.isLoading && state.currentFilter !== 'favorites') return;
+            if (state.isLoading) return;
             
             elements.channelsGrid.innerHTML = '';
             
             const filteredChannels = filterChannels();
-            
-            if (filteredChannels.length === 0 && state.currentFilter === 'favorites') {
-                renderFavoriteChannels();
-                return;
-            }
             
             if (filteredChannels.length === 0) {
                 elements.channelsGrid.innerHTML = '<p class="no-results">No se encontraron canales. Prueba con otros filtros.</p>';
@@ -881,7 +829,7 @@
                             ${channel.time || 'LIVE'}
                         </div>
                         <h3 class="channel-name">${channel.name}</h3>
-                        <div class="channel-number">${channel.number}</div>
+                        <div class="channel-number">CH-${channel.number}</div>
                     </div>
                     <p class="channel-event">${channel.event}</p>
                 `;
@@ -909,80 +857,6 @@
                     state.longPressTimer = setTimeout(() => {
                         if (confirm(`¿Eliminar ${channel.name} de favoritos?`)) {
                             removeFavorite(channel.number);
-                        }
-                    }, 1000);
-                });
-                
-                channelCard.addEventListener('mouseup', () => {
-                    clearTimeout(state.longPressTimer);
-                });
-                
-                channelCard.addEventListener('mouseleave', () => {
-                    clearTimeout(state.longPressTimer);
-                });
-                
-                elements.channelsGrid.appendChild(channelCard);
-            });
-        }
-
-        function renderFavoriteChannels() {
-            if (state.favorites.length === 0) {
-                elements.channelsGrid.innerHTML = '<p class="no-results">No tienes canales favoritos guardados.</p>';
-                return;
-            }
-
-            state.favorites.forEach(favorite => {
-                const existingChannel = state.channels.find(c => c.number === favorite.number);
-                const channelCard = document.createElement('div');
-                channelCard.className = 'channel-card';
-                channelCard.dataset.id = favorite.number;
-                
-                channelCard.innerHTML = `
-                    <div class="channel-header">
-                        <div class="channel-time">
-                            FAVORITO
-                        </div>
-                        <h3 class="channel-name">${favorite.name}</h3>
-                        <div class="channel-number">${favorite.number}</div>
-                    </div>
-                    ${existingChannel ? `<p class="channel-event">${existingChannel.event || ''}</p>` : ''}
-                `;
-                
-                channelCard.addEventListener('click', () => {
-                    if (existingChannel) {
-                        playChannel(existingChannel);
-                    } else {
-                        playChannel({
-                            name: favorite.name,
-                            number: favorite.number,
-                            url: state.s2Toggle 
-                                ? `https://stream2wetch.top/embed/stream-${favorite.number}.php`
-                                : `https://daddylivehd1.click/channel-${favorite.number}`,
-                            event: '',
-                            time: '',
-                            rawText: favorite.name,
-                            isSecondary: false
-                        });
-                    }
-                });
-                
-                channelCard.addEventListener('touchstart', (e) => {
-                    state.longPressTimer = setTimeout(() => {
-                        e.preventDefault();
-                        if (confirm(`¿Eliminar ${favorite.name} de favoritos?`)) {
-                            removeFavorite(favorite.number);
-                        }
-                    }, 1000);
-                });
-                
-                channelCard.addEventListener('touchend', () => {
-                    clearTimeout(state.longPressTimer);
-                });
-                
-                channelCard.addEventListener('mousedown', (e) => {
-                    state.longPressTimer = setTimeout(() => {
-                        if (confirm(`¿Eliminar ${favorite.name} de favoritos?`)) {
-                            removeFavorite(favorite.number);
                         }
                     }, 1000);
                 });
@@ -1049,9 +923,6 @@
                 : channel.url;
             
             elements.videoFrame.src = streamUrl;
-            
-            // Scroll suave hacia el reproductor
-            elements.playerContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         function showChannelList() {
@@ -1072,21 +943,7 @@
                     return diffMinutes >= -30 && diffMinutes <= 240;
                 });
             } else if (state.currentFilter === 'favorites') {
-                channelsToShow = state.favorites.map(favorite => {
-                    const existingChannel = state.channels.find(c => c.number === favorite.number);
-                    return existingChannel || {
-                        name: favorite.name,
-                        number: favorite.number,
-                        url: state.s2Toggle 
-                            ? `https://stream2wetch.top/embed/stream-${favorite.number}.php`
-                            : `https://daddylivehd1.click/channel-${favorite.number}`,
-                        event: '',
-                        time: '',
-                        rawText: favorite.name,
-                        isFavorite: true,
-                        isSecondary: false
-                    };
-                });
+                channelsToShow = state.channels.filter(c => c.isFavorite);
             } else {
                 channelsToShow = [...state.channels];
             }
@@ -1096,7 +953,7 @@
                 ? channelsToShow.filter(c => 
                     c.name.toLowerCase().includes(searchTerm) || 
                     c.number.includes(searchTerm) ||
-                    (c.event && c.event.toLowerCase().includes(searchTerm)))
+                    c.event.toLowerCase().includes(searchTerm))
                 : channelsToShow;
             
             let currentChannelFound = false;
@@ -1107,10 +964,10 @@
                 channelItem.innerHTML = `
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                         <strong>${channel.name}</strong>
-                        <span>${channel.number}</span>
+                        <span>CH-${channel.number}</span>
                     </div>
                     <div style="font-size: 0.9rem; color: var(--text-light);">
-                        ${channel.time || 'LIVE'} ${channel.event || ''}
+                        ${channel.time || 'LIVE'} ${channel.event}
                     </div>
                 `;
                 
@@ -1133,10 +990,10 @@
                 currentChannelItem.innerHTML = `
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                         <strong>${state.currentStream.name}</strong>
-                        <span>${state.currentStream.number}</span>
+                        <span>CH-${state.currentStream.number}</span>
                     </div>
                     <div style="font-size: 0.9rem; color: var(--text-light);">
-                        ${state.currentStream.time || 'LIVE'} ${state.currentStream.event || ''}
+                        ${state.currentStream.time || 'LIVE'} ${state.currentStream.event}
                     </div>
                 `;
                 
@@ -1157,7 +1014,8 @@
 
         function showFavoriteModal() {
             if (!state.currentStream) return;
-            elements.favoriteNameInput.value = state.currentStream.name;
+            const existingFavorite = state.favorites.find(f => f.number === state.currentStream.number);
+            elements.favoriteNameInput.value = existingFavorite ? existingFavorite.name : state.currentStream.name;
             elements.favoriteModal.style.display = 'flex';
         }
 
@@ -1183,6 +1041,11 @@
                 });
             } else {
                 state.favorites[existingIndex].name = favoriteName;
+            }
+            
+            const channelIndex = state.channels.findIndex(c => c.number === state.currentStream.number);
+            if (channelIndex !== -1) {
+                state.channels[channelIndex].isFavorite = true;
             }
             
             localStorage.setItem('daddyliveFavorites', JSON.stringify(state.favorites));
@@ -1254,12 +1117,6 @@
                 if (e.key === 'Enter') {
                     const value = elements.searchInput.value.trim();
                     
-                    if (value.startsWith('&')) {
-                        processSecretCode(value);
-                        elements.searchInput.value = '';
-                        return;
-                    }
-                    
                     if (/^#?\d+$/.test(value)) {
                         const channelNumber = value.replace('#', '');
                         const channel = state.channels.find(c => c.number === channelNumber);
@@ -1271,10 +1128,10 @@
                             
                             if (state.s2Toggle) {
                                 url = `https://stream2wetch.top/embed/stream-${channelNumber}.php`;
-                                nombre = `Canal ${channelNumber}`;
+                                nombre = `Canal ${channelNumber} (S2Wetch)`;
                             } else {
                                 url = `https://daddylivehd1.click/channel-${channelNumber}`;
-                                nombre = `Canal ${channelNumber}`;
+                                nombre = `Canal ${channelNumber} (DaddyLive)`;
                             }
                             
                             playChannel({
@@ -1301,8 +1158,10 @@
                 if (!state.currentStream) return;
                 
                 state.longPressTimer = setTimeout(() => {
-                    if (confirm('¿Quieres eliminar este canal de favoritos?')) {
-                        removeFavorite(state.currentStream.number);
+                    if (state.currentStream.isFavorite) {
+                        if (confirm('¿Quieres eliminar este canal de favoritos?')) {
+                            removeFavorite(state.currentStream.number);
+                        }
                     }
                 }, 1000);
             });
@@ -1316,7 +1175,11 @@
             });
             
             elements.favoriteBtn.addEventListener('click', () => {
-                showFavoriteModal();
+                if (!state.currentStream) return;
+                
+                if (!state.currentStream.isFavorite) {
+                    showFavoriteModal();
+                }
             });
             
             elements.channelListBtn.addEventListener('click', showChannelList);
