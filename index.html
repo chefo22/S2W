@@ -500,6 +500,22 @@
             color: var(--text-dark);
         }
 
+        .channel-list-item {
+            padding: 0.8rem;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .channel-list-item:hover {
+            background-color: rgba(37, 99, 235, 0.1);
+        }
+
+        .channel-list-item.active {
+            background-color: rgba(37, 99, 235, 0.2);
+            border-left: 3px solid var(--primary);
+        }
+
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -704,7 +720,6 @@
                     .then(data => {
                         if (data.contents) {
                             state.channels = extractChannels(data.contents);
-                            // Guardar copia de seguridad
                             localStorage.setItem('daddyliveBackup', JSON.stringify(state.channels));
                             state.backupChannels = state.channels;
                             renderChannels();
@@ -915,27 +930,46 @@
         function showChannelList() {
             elements.channelListContent.innerHTML = '';
             
-            const channelsToShow = state.currentFilter === 'favorites' 
-                ? state.channels.filter(c => c.isFavorite)
-                : [...state.channels];
+            let channelsToShow;
             
-            const searchTerm = elements.searchInput.value.toLowerCase();
+            if (state.currentFilter === 'live') {
+                const now = new Date();
+                channelsToShow = state.channels.filter(channel => {
+                    if (!channel.time) return false;
+                    
+                    const [hours, minutes] = channel.time.split(':').map(Number);
+                    const eventTime = new Date();
+                    eventTime.setHours(hours, minutes, 0, 0);
+                    
+                    const diffMinutes = (now - eventTime) / (1000 * 60);
+                    return diffMinutes >= -30 && diffMinutes <= 240;
+                });
+            } else if (state.currentFilter === 'favorites') {
+                channelsToShow = state.channels.filter(c => c.isFavorite);
+            } else {
+                channelsToShow = [...state.channels];
+            }
+            
+            const searchTerm = elements.channelListSearch.value.toLowerCase();
             const filteredChannels = searchTerm 
                 ? channelsToShow.filter(c => 
                     c.name.toLowerCase().includes(searchTerm) || 
-                    c.number.includes(searchTerm))
+                    c.number.includes(searchTerm) ||
+                    c.event.toLowerCase().includes(searchTerm))
                 : channelsToShow;
+            
+            let currentChannelFound = false;
             
             filteredChannels.forEach(channel => {
                 const channelItem = document.createElement('div');
-                channelItem.className = 'channel-list-item';
+                channelItem.className = `channel-list-item ${state.currentStream && state.currentStream.number === channel.number ? 'active' : ''}`;
                 channelItem.innerHTML = `
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                         <strong>${channel.name}</strong>
                         <span>CH-${channel.number}</span>
                     </div>
                     <div style="font-size: 0.9rem; color: var(--text-light);">
-                        ${channel.time} ${channel.event}
+                        ${channel.time || 'LIVE'} ${channel.event}
                     </div>
                 `;
                 
@@ -945,7 +979,33 @@
                 });
                 
                 elements.channelListContent.appendChild(channelItem);
+                
+                if (state.currentStream && state.currentStream.number === channel.number) {
+                    channelItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    currentChannelFound = true;
+                }
             });
+            
+            if (!currentChannelFound && state.currentStream) {
+                const currentChannelItem = document.createElement('div');
+                currentChannelItem.className = 'channel-list-item active';
+                currentChannelItem.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <strong>${state.currentStream.name}</strong>
+                        <span>CH-${state.currentStream.number}</span>
+                    </div>
+                    <div style="font-size: 0.9rem; color: var(--text-light);">
+                        ${state.currentStream.time || 'LIVE'} ${state.currentStream.event}
+                    </div>
+                `;
+                
+                currentChannelItem.addEventListener('click', () => {
+                    hideChannelList();
+                });
+                
+                elements.channelListContent.prepend(currentChannelItem);
+                currentChannelItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
             
             elements.channelListModal.style.display = 'flex';
         }
