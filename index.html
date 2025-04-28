@@ -368,6 +368,44 @@
             margin-top: 0.5rem;
         }
 
+        .channel-group {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 0;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .channel-group-header {
+            padding: 0.8rem 1rem;
+            background: rgba(37, 99, 235, 0.1);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .channel-group-title {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .channel-group-count {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            background: rgba(37, 99, 235, 0.2);
+            padding: 0.2rem 0.5rem;
+            border-radius: 20px;
+        }
+
+        .channel-group-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 0.8rem;
+            padding: 0.8rem;
+        }
+
         .floating-buttons {
             position: fixed;
             bottom: 15px;
@@ -556,6 +594,10 @@
                 bottom: 10px;
                 gap: 8px;
             }
+
+            .channel-group-content {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -582,6 +624,7 @@
                 <button class="filter-button active" id="filterAll">Todos</button>
                 <button class="filter-button" id="filterLive">En Vivo</button>
                 <button class="filter-button" id="filterFavorites">Favoritos</button>
+                <button class="filter-button" id="filterGroup">Agrupar</button>
             </div>
         </section>
 
@@ -648,7 +691,8 @@
             s2Toggle: true,
             isLoading: false,
             longPressTimer: null,
-            backupChannels: JSON.parse(localStorage.getItem('daddyliveBackup')) || []
+            backupChannels: JSON.parse(localStorage.getItem('daddyliveBackup')) || [],
+            isGrouped: false
         };
 
         const elements = {
@@ -659,6 +703,7 @@
             filterAll: document.getElementById('filterAll'),
             filterLive: document.getElementById('filterLive'),
             filterFavorites: document.getElementById('filterFavorites'),
+            filterGroup: document.getElementById('filterGroup'),
             favoriteBtn: document.getElementById('favoriteBtn'),
             channelListBtn: document.getElementById('channelListBtn'),
             closePlayerBtn: document.getElementById('closePlayerBtn'),
@@ -818,59 +863,121 @@
                 return;
             }
             
-            filteredChannels.forEach(channel => {
-                const channelCard = document.createElement('div');
-                channelCard.className = `channel-card ${channel.time === 'LIVE' ? 'live' : ''}`;
-                channelCard.dataset.id = channel.number;
+            if (state.isGrouped) {
+                renderGroupedChannels(filteredChannels);
+            } else {
+                renderUngroupedChannels(filteredChannels);
+            }
+        }
+
+        function renderGroupedChannels(channels) {
+            // Agrupar canales por hora y evento
+            const groups = {};
+            
+            channels.forEach(channel => {
+                const groupKey = `${channel.time || 'LIVE'}|${channel.event}`;
+                if (!groups[groupKey]) {
+                    groups[groupKey] = [];
+                }
+                groups[groupKey].push(channel);
+            });
+            
+            // Ordenar grupos por hora (los LIVE primero)
+            const sortedGroups = Object.entries(groups).sort((a, b) => {
+                if (a[0].startsWith('LIVE')) return -1;
+                if (b[0].startsWith('LIVE')) return 1;
+                return a[0].localeCompare(b[0]);
+            });
+            
+            // Renderizar cada grupo
+            sortedGroups.forEach(([groupKey, groupChannels]) => {
+                const [time, event] = groupKey.split('|');
                 
-                channelCard.innerHTML = `
-                    <div class="channel-header">
-                        <div class="channel-time ${channel.time ? 'live' : ''}">
-                            ${channel.time || 'LIVE'}
+                const groupElement = document.createElement('div');
+                groupElement.className = 'channel-group';
+                
+                groupElement.innerHTML = `
+                    <div class="channel-group-header">
+                        <div class="channel-group-title">
+                            ${time} ${event || 'Evento no especificado'}
                         </div>
-                        <h3 class="channel-name">${channel.name}</h3>
-                        <div class="channel-number">CH-${channel.number}</div>
+                        <div class="channel-group-count">
+                            ${groupChannels.length} canales
+                        </div>
                     </div>
-                    <p class="channel-event">${channel.event}</p>
+                    <div class="channel-group-content"></div>
                 `;
                 
-                channelCard.addEventListener('click', () => playChannel(channel));
+                const groupContent = groupElement.querySelector('.channel-group-content');
                 
-                channelCard.addEventListener('touchstart', (e) => {
-                    if (!channel.isFavorite) return;
-                    
-                    state.longPressTimer = setTimeout(() => {
-                        e.preventDefault();
-                        if (confirm(`¿Eliminar ${channel.name} de favoritos?`)) {
-                            removeFavorite(channel.number);
-                        }
-                    }, 1000);
+                groupChannels.forEach(channel => {
+                    const channelCard = createChannelCard(channel);
+                    groupContent.appendChild(channelCard);
                 });
                 
-                channelCard.addEventListener('touchend', () => {
-                    clearTimeout(state.longPressTimer);
-                });
-                
-                channelCard.addEventListener('mousedown', (e) => {
-                    if (!channel.isFavorite) return;
-                    
-                    state.longPressTimer = setTimeout(() => {
-                        if (confirm(`¿Eliminar ${channel.name} de favoritos?`)) {
-                            removeFavorite(channel.number);
-                        }
-                    }, 1000);
-                });
-                
-                channelCard.addEventListener('mouseup', () => {
-                    clearTimeout(state.longPressTimer);
-                });
-                
-                channelCard.addEventListener('mouseleave', () => {
-                    clearTimeout(state.longPressTimer);
-                });
-                
+                elements.channelsGrid.appendChild(groupElement);
+            });
+        }
+
+        function renderUngroupedChannels(channels) {
+            channels.forEach(channel => {
+                const channelCard = createChannelCard(channel);
                 elements.channelsGrid.appendChild(channelCard);
             });
+        }
+
+        function createChannelCard(channel) {
+            const channelCard = document.createElement('div');
+            channelCard.className = `channel-card ${channel.time === 'LIVE' ? 'live' : ''}`;
+            channelCard.dataset.id = channel.number;
+            
+            channelCard.innerHTML = `
+                <div class="channel-header">
+                    <div class="channel-time ${channel.time ? 'live' : ''}">
+                        ${channel.time || 'LIVE'}
+                    </div>
+                    <h3 class="channel-name">${channel.name}</h3>
+                    <div class="channel-number">CH-${channel.number}</div>
+                </div>
+                <p class="channel-event">${channel.event}</p>
+            `;
+            
+            channelCard.addEventListener('click', () => playChannel(channel));
+            
+            channelCard.addEventListener('touchstart', (e) => {
+                if (!channel.isFavorite) return;
+                
+                state.longPressTimer = setTimeout(() => {
+                    e.preventDefault();
+                    if (confirm(`¿Eliminar ${channel.name} de favoritos?`)) {
+                        removeFavorite(channel.number);
+                    }
+                }, 1000);
+            });
+            
+            channelCard.addEventListener('touchend', () => {
+                clearTimeout(state.longPressTimer);
+            });
+            
+            channelCard.addEventListener('mousedown', (e) => {
+                if (!channel.isFavorite) return;
+                
+                state.longPressTimer = setTimeout(() => {
+                    if (confirm(`¿Eliminar ${channel.name} de favoritos?`)) {
+                        removeFavorite(channel.number);
+                    }
+                }, 1000);
+            });
+            
+            channelCard.addEventListener('mouseup', () => {
+                clearTimeout(state.longPressTimer);
+            });
+            
+            channelCard.addEventListener('mouseleave', () => {
+                clearTimeout(state.longPressTimer);
+            });
+            
+            return channelCard;
         }
 
         function filterChannels() {
@@ -909,6 +1016,24 @@
                     break;
             }
             
+            // Si estamos agrupando, ordenamos por hora y evento para mejor agrupación
+            if (state.isGrouped) {
+                filtered.sort((a, b) => {
+                    // Los LIVE primero
+                    if (!a.time && b.time) return -1;
+                    if (a.time && !b.time) return 1;
+                    
+                    // Luego por hora
+                    if (a.time && b.time) {
+                        const timeCompare = a.time.localeCompare(b.time);
+                        if (timeCompare !== 0) return timeCompare;
+                    }
+                    
+                    // Finalmente por evento
+                    return a.event.localeCompare(b.event);
+                });
+            }
+            
             return filtered;
         }
 
@@ -919,7 +1044,7 @@
             state.playerVisible = true;
             
             const streamUrl = state.s2Toggle 
-                ? `https://stream2wetch.top/embed/stream-${channel.number}.php`
+                ? `https://daddylivehd1.click./embed/stream-${channel.number}.php`
                 : channel.url;
             
             elements.videoFrame.src = streamUrl;
@@ -1113,6 +1238,12 @@
                 elements.filterAll.classList.remove('active');
                 elements.filterLive.classList.remove('active');
                 elements.filterFavorites.classList.add('active');
+                renderChannels();
+            });
+            
+            elements.filterGroup.addEventListener('click', () => {
+                state.isGrouped = !state.isGrouped;
+                elements.filterGroup.classList.toggle('active', state.isGrouped);
                 renderChannels();
             });
             
