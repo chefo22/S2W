@@ -923,6 +923,8 @@
                 : channel.url;
             
             elements.videoFrame.src = streamUrl;
+            
+            elements.favoriteBtn.classList.toggle('active', channel.isFavorite);
         }
 
         function showChannelList() {
@@ -1049,6 +1051,7 @@
             }
             
             localStorage.setItem('daddyliveFavorites', JSON.stringify(state.favorites));
+            elements.favoriteBtn.classList.add('active');
             
             if (state.currentFilter === 'favorites') {
                 renderChannels();
@@ -1069,6 +1072,10 @@
             
             if (state.currentFilter === 'favorites') {
                 renderChannels();
+            }
+            
+            if (state.currentStream && state.currentStream.number === channelNumber) {
+                elements.favoriteBtn.classList.remove('active');
             }
         }
 
@@ -1116,6 +1123,45 @@
             elements.searchInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     const value = elements.searchInput.value.trim();
+                    
+                    // Verificar códigos secretos
+                    if (value === '&O') {
+                        // Activar búsqueda de canales (ya está activa por defecto)
+                        state.currentFilter = 'all';
+                        elements.filterAll.classList.add('active');
+                        elements.filterLive.classList.remove('active');
+                        elements.filterFavorites.classList.remove('active');
+                        elements.searchInput.value = '';
+                        renderChannels();
+                        return;
+                    } else if (value === '&D') {
+                        // Activar modo oscuro
+                        toggleDarkMode();
+                        elements.searchInput.value = '';
+                        return;
+                    } else if (value === '&F') {
+                        // Activar pantalla completa
+                        if (document.fullscreenElement) {
+                            document.exitFullscreen();
+                        } else {
+                            document.documentElement.requestFullscreen();
+                        }
+                        elements.searchInput.value = '';
+                        return;
+                    } else if (value === '&C') {
+                        // Usar copia de seguridad
+                        if (state.backupChannels.length > 0) {
+                            state.channels = state.backupChannels;
+                            renderChannels();
+                            updateSystemStatus('healthy');
+                            updateChannelCount();
+                            alert('Copia de seguridad cargada correctamente');
+                        } else {
+                            alert('No hay copia de seguridad disponible');
+                        }
+                        elements.searchInput.value = '';
+                        return;
+                    }
                     
                     if (/^#?\d+$/.test(value)) {
                         const channelNumber = value.replace('#', '');
