@@ -581,6 +581,26 @@
             border-left: 3px solid var(--primary);
         }
 
+        .update-notification {
+            position: fixed;
+            bottom: 70px;
+            right: 15px;
+            background: var(--primary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            box-shadow: var(--shadow-md);
+            z-index: 100;
+            display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -624,6 +644,13 @@
 
             .channel-group-content {
                 grid-template-columns: 1fr;
+            }
+
+            .update-notification {
+                bottom: 120px;
+                left: 15px;
+                right: 15px;
+                text-align: center;
             }
         }
     </style>
@@ -703,6 +730,10 @@
         <button class="floating-btn fullscreen-btn" id="fullscreenBtn">⛶</button>
     </div>
 
+    <div class="update-notification" id="updateNotification">
+        Canales actualizados correctamente
+    </div>
+
     <div class="loading" id="loading">
         <div class="spinner"></div>
     </div>
@@ -759,7 +790,8 @@
             favoriteModal: document.getElementById('favoriteModal'),
             favoriteNameInput: document.getElementById('favoriteNameInput'),
             saveFavoriteBtn: document.getElementById('saveFavoriteBtn'),
-            cancelFavoriteBtn: document.getElementById('cancelFavoriteBtn')
+            cancelFavoriteBtn: document.getElementById('cancelFavoriteBtn'),
+            updateNotification: document.getElementById('updateNotification')
         };
 
         function init() {
@@ -770,11 +802,29 @@
 
             state.favorites = JSON.parse(localStorage.getItem('daddyliveFavorites')) || [];
             setupEventListeners();
-            checkBackupAndLoadChannels();
+            
+            // Cargar copia de seguridad primero
+            loadBackupChannels();
+            
+            // Luego intentar actualizar en segundo plano
+            setTimeout(loadChannels, 1000);
             
             elements.premiumBtn.classList.toggle('active', state.usePremium);
             
             loadPremiumLinks();
+        }
+
+        function loadBackupChannels() {
+            if (state.backupChannels.length > 0) {
+                state.channels = state.backupChannels;
+                renderChannels();
+                updateSystemStatus('healthy');
+                updateChannelCount();
+                showNotification('Mostrando copia de seguridad. Actualizando...', 3000);
+            } else {
+                updateSystemStatus('loading');
+                elements.channelsGrid.innerHTML = '<p class="no-results">Cargando canales por primera vez...</p>';
+            }
         }
 
         async function loadPremiumLinks() {
@@ -817,16 +867,22 @@
                     state.serverStatus[server] = 'error';
                 }
             }
-            
-            console.log('Enlaces premium cargados:', state.premiumLinks);
         }
 
         function getPremiumLink(channelNumber) {
+            // Primero verifica si ya tenemos los enlaces premium cargados
             for (const server in state.premiumLinks) {
                 if (state.premiumLinks[server][channelNumber]) {
                     return state.premiumLinks[server][channelNumber];
                 }
             }
+            
+            // Si no se encontró, intenta construir la URL basada en el patrón conocido
+            if (state.premiumServers.length > 0) {
+                const baseUrl = state.premiumServers[0]; // Usa el primer servidor por defecto
+                return `${baseUrl}premium${channelNumber}/mono.m3u8`;
+            }
+            
             return null;
         }
 
@@ -863,7 +919,7 @@
                 return;
             }
             
-            // Verificar modo premium
+            // Verificar modo premium - incluso con copia de seguridad
             if (state.usePremium) {
                 const premiumLink = getPremiumLink(channel.number);
                 if (premiumLink) {
@@ -944,66 +1000,45 @@
             elements.videoFrame.src = `https://daddylivehd1.click/embed/stream-${channel.number}.php`;
         }
 
-        function checkBackupAndLoadChannels() {
-            if (state.backupChannels.length > 0) {
-                const useBackup = confirm('¿Quieres usar la copia de seguridad de los canales?');
-                if (useBackup) {
-                    state.channels = state.backupChannels;
-                    renderChannels();
-                    updateSystemStatus('healthy');
-                    updateChannelCount();
-                    return;
-                }
-            }
-            loadChannels();
-        }
-
         function loadChannels() {
             state.isLoading = true;
-            updateSystemStatus('loading');
             
-            elements.channelsGrid.innerHTML = '<div class="loading-placeholder"><p>Cargando canales...</p></div>';
+            const targetUrl = 'https://daddylivehd1.click/';
+            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
             
-            setTimeout(() => {
-                const targetUrl = 'https://daddylivehd1.click/';
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-                
-                fetch(proxyUrl)
-                    .then(response => {
-                        if (!response.ok) throw new Error('Error en la conexión');
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data.contents) {
-                            state.channels = extractChannels(data.contents);
-                            localStorage.setItem('daddyliveBackup', JSON.stringify(state.channels));
-                            state.backupChannels = state.channels;
+            fetch(proxyUrl)
+                .then(response => {
+                    if (!response.ok) throw new Error('Error en la conexión');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.contents) {
+                        const newChannels = extractChannels(data.contents);
+                        if (newChannels.length > 0) {
+                            state.channels = newChannels;
+                            localStorage.setItem('daddyliveBackup', JSON.stringify(newChannels));
+                            state.backupChannels = newChannels;
                             renderChannels();
                             updateSystemStatus('healthy');
                             updateChannelCount();
+                            
+                            // Mostrar notificación de actualización
+                            elements.updateNotification.style.display = 'block';
+                            setTimeout(() => {
+                                elements.updateNotification.style.display = 'none';
+                            }, 3000);
                         }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al actualizar canales:', error);
+                    if (state.channels.length === 0) {
                         updateSystemStatus('unstable');
-                        if (state.backupChannels.length > 0) {
-                            const useBackup = confirm('Error al cargar canales. ¿Quieres usar la copia de seguridad?');
-                            if (useBackup) {
-                                state.channels = state.backupChannels;
-                                renderChannels();
-                                updateSystemStatus('healthy');
-                                updateChannelCount();
-                            } else {
-                                elements.channelsGrid.innerHTML = '<p class="no-results">Error al cargar canales. Puedes intentar buscar canales manualmente.</p>';
-                            }
-                        } else {
-                            elements.channelsGrid.innerHTML = '<p class="no-results">Error al cargar canales. Puedes intentar buscar canales manualmente.</p>';
-                        }
-                    })
-                    .finally(() => {
-                        state.isLoading = false;
-                    });
-            }, 100);
+                    }
+                })
+                .finally(() => {
+                    state.isLoading = false;
+                });
         }
 
         function updateChannelCount() {
@@ -1573,7 +1608,7 @@
             showNotification(message);
         }
 
-        function showNotification(message) {
+        function showNotification(message, duration = 2000) {
             const notification = document.createElement('div');
             notification.style.position = 'fixed';
             notification.style.bottom = '20px';
@@ -1595,7 +1630,7 @@
                 setTimeout(() => {
                     notification.remove();
                 }, 500);
-            }, 2000);
+            }, duration);
         }
 
         function toggleDarkMode() {
