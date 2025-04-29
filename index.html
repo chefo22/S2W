@@ -803,10 +803,8 @@
             state.favorites = JSON.parse(localStorage.getItem('daddyliveFavorites')) || [];
             setupEventListeners();
             
-            // Cargar copia de seguridad primero
             loadBackupChannels();
             
-            // Luego intentar actualizar en segundo plano
             setTimeout(loadChannels, 1000);
             
             elements.premiumBtn.classList.toggle('active', state.usePremium);
@@ -870,16 +868,14 @@
         }
 
         function getPremiumLink(channelNumber) {
-            // Primero verifica si ya tenemos los enlaces premium cargados
             for (const server in state.premiumLinks) {
                 if (state.premiumLinks[server][channelNumber]) {
                     return state.premiumLinks[server][channelNumber];
                 }
             }
             
-            // Si no se encontró, intenta construir la URL basada en el patrón conocido
             if (state.premiumServers.length > 0) {
-                const baseUrl = state.premiumServers[0]; // Usa el primer servidor por defecto
+                const baseUrl = state.premiumServers[0];
                 return `${baseUrl}premium${channelNumber}/mono.m3u8`;
             }
             
@@ -899,7 +895,6 @@
         }
 
         function playChannel(channel) {
-            // Limpiar cualquier instancia HLS previa
             if (state.hls) {
                 state.hls.destroy();
                 state.hls = null;
@@ -910,16 +905,13 @@
             elements.playerContainer.classList.add('active');
             state.playerVisible = true;
             
-            // Mostrar loading mientras se carga el stream
             elements.loading.classList.add('active');
             
-            // Verificar si es un enlace M3U8
             if (channel.url && channel.url.includes('.m3u8')) {
                 playM3U8Stream(channel.url);
                 return;
             }
             
-            // Verificar modo premium - incluso con copia de seguridad
             if (state.usePremium) {
                 const premiumLink = getPremiumLink(channel.number);
                 if (premiumLink) {
@@ -930,7 +922,6 @@
                 }
             }
             
-            // Si no es M3U8 ni premium, usar el método original
             playOriginalChannel(channel);
         }
 
@@ -942,7 +933,12 @@
                     maxBufferSize: 60 * 1000 * 1000,
                     maxBufferHole: 5.0,
                     lowLatencyMode: false,
-                    enableWorker: true
+                    enableWorker: true,
+                    xhrSetup: function(xhr) {
+                        xhr.setRequestHeader('Referer', 'https://daddylivehd1.click/');
+                        xhr.setRequestHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+                        xhr.withCredentials = true;
+                    }
                 });
                 
                 state.hls.loadSource(url);
@@ -977,7 +973,6 @@
                     }
                 });
             } else if (elements.videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
-                // Para Safari
                 elements.videoPlayer.src = url;
                 elements.videoPlayer.addEventListener('loadedmetadata', function() {
                     elements.loading.classList.remove('active');
@@ -1022,7 +1017,6 @@
                             updateSystemStatus('healthy');
                             updateChannelCount();
                             
-                            // Mostrar notificación de actualización
                             elements.updateNotification.style.display = 'block';
                             setTimeout(() => {
                                 elements.updateNotification.style.display = 'none';
