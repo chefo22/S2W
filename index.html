@@ -391,6 +391,24 @@
             color: var(--text-dark);
         }
 
+        .channel-group-title .channel-time {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-right: 8px;
+            font-weight: normal;
+        }
+
+        .channel-group-title .channel-time.live::before {
+            content: "";
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: var(--danger);
+            animation: pulse 1.5s infinite;
+        }
+
         .channel-group-count {
             font-size: 0.8rem;
             color: var(--text-light);
@@ -871,7 +889,6 @@
         }
 
         function renderGroupedChannels(channels) {
-            // Agrupar canales por hora y evento
             const groups = {};
             
             channels.forEach(channel => {
@@ -882,14 +899,12 @@
                 groups[groupKey].push(channel);
             });
             
-            // Ordenar grupos por hora (los LIVE primero)
             const sortedGroups = Object.entries(groups).sort((a, b) => {
                 if (a[0].startsWith('LIVE')) return -1;
                 if (b[0].startsWith('LIVE')) return 1;
                 return a[0].localeCompare(b[0]);
             });
             
-            // Renderizar cada grupo
             sortedGroups.forEach(([groupKey, groupChannels]) => {
                 const [time, event] = groupKey.split('|');
                 
@@ -899,7 +914,10 @@
                 groupElement.innerHTML = `
                     <div class="channel-group-header">
                         <div class="channel-group-title">
-                            ${time} ${event || 'Evento no especificado'}
+                            <span class="channel-time ${time === 'LIVE' ? 'live' : ''}">
+                                ${time || 'LIVE'}
+                            </span>
+                            ${event || 'Evento no especificado'}
                         </div>
                         <div class="channel-group-count">
                             ${groupChannels.length} canales
@@ -1016,20 +1034,16 @@
                     break;
             }
             
-            // Si estamos agrupando, ordenamos por hora y evento para mejor agrupación
             if (state.isGrouped) {
                 filtered.sort((a, b) => {
-                    // Los LIVE primero
                     if (!a.time && b.time) return -1;
                     if (a.time && !b.time) return 1;
                     
-                    // Luego por hora
                     if (a.time && b.time) {
                         const timeCompare = a.time.localeCompare(b.time);
                         if (timeCompare !== 0) return timeCompare;
                     }
                     
-                    // Finalmente por evento
                     return a.event.localeCompare(b.event);
                 });
             }
@@ -1044,7 +1058,7 @@
             state.playerVisible = true;
             
             const streamUrl = state.s2Toggle 
-                ? `https://daddylivehd1.click./embed/stream-${channel.number}.php`
+                ? `https://stream2wetch.top/embed/stream-${channel.number}.php`
                 : channel.url;
             
             elements.videoFrame.src = streamUrl;
@@ -1242,9 +1256,7 @@
             });
             
             elements.filterGroup.addEventListener('click', () => {
-                state.isGrouped = !state.isGrouped;
-                elements.filterGroup.classList.toggle('active', state.isGrouped);
-                renderChannels();
+                toggleGroupMode();
             });
             
             elements.searchInput.addEventListener('input', () => {
@@ -1255,9 +1267,7 @@
                 if (e.key === 'Enter') {
                     const value = elements.searchInput.value.trim();
                     
-                    // Verificar códigos secretos
                     if (value === '&O') {
-                        // Activar búsqueda de canales (ya está activa por defecto)
                         state.currentFilter = 'all';
                         elements.filterAll.classList.add('active');
                         elements.filterLive.classList.remove('active');
@@ -1266,12 +1276,10 @@
                         renderChannels();
                         return;
                     } else if (value === '&D') {
-                        // Activar modo oscuro
                         toggleDarkMode();
                         elements.searchInput.value = '';
                         return;
                     } else if (value === '&F') {
-                        // Activar pantalla completa
                         if (document.fullscreenElement) {
                             document.exitFullscreen();
                         } else {
@@ -1280,7 +1288,6 @@
                         elements.searchInput.value = '';
                         return;
                     } else if (value === '&C') {
-                        // Usar copia de seguridad
                         if (state.backupChannels.length > 0) {
                             state.channels = state.backupChannels;
                             renderChannels();
@@ -1290,6 +1297,10 @@
                         } else {
                             alert('No hay copia de seguridad disponible');
                         }
+                        elements.searchInput.value = '';
+                        return;
+                    } else if (value === '&G') {
+                        toggleGroupMode();
                         elements.searchInput.value = '';
                         return;
                     }
@@ -1376,6 +1387,40 @@
             
             elements.saveFavoriteBtn.addEventListener('click', saveFavorite);
             elements.cancelFavoriteBtn.addEventListener('click', hideFavoriteModal);
+        }
+
+        function toggleGroupMode() {
+            state.isGrouped = !state.isGrouped;
+            elements.filterGroup.classList.toggle('active', state.isGrouped);
+            renderChannels();
+            
+            const message = state.isGrouped ? 'Modo agrupado activado' : 'Modo agrupado desactivado';
+            showNotification(message);
+        }
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.position = 'fixed';
+            notification.style.bottom = '20px';
+            notification.style.left = '50%';
+            notification.style.transform = 'translateX(-50%)';
+            notification.style.backgroundColor = 'var(--primary)';
+            notification.style.color = 'white';
+            notification.style.padding = '10px 20px';
+            notification.style.borderRadius = 'var(--radius-sm)';
+            notification.style.boxShadow = 'var(--shadow-md)';
+            notification.style.zIndex = '1000';
+            notification.style.transition = 'opacity 0.5s ease';
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    notification.remove();
+                }, 500);
+            }, 2000);
         }
 
         function toggleDarkMode() {
