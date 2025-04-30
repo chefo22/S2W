@@ -851,11 +851,6 @@
             
             elements.loading.classList.add('active');
             
-            if (channel.url && channel.url.includes('.m3u8')) {
-                playM3U8Stream(channel.url);
-                return;
-            }
-            
             if (state.usePremium) {
                 const premiumLink = getPremiumLink(channel.number);
                 if (premiumLink) {
@@ -866,7 +861,10 @@
                 }
             }
             
-            playOriginalChannel(channel);
+            elements.loading.classList.remove('active');
+            elements.playerContainer.innerHTML = '<iframe id="videoFrame" src="about:blank" allowfullscreen></iframe>';
+            elements.videoFrame = document.getElementById('videoFrame');
+            elements.videoFrame.src = `https://daddylivehd1.click/embed/stream-${channel.number}.php`;
         }
 
         function playM3U8Stream(url) {
@@ -1203,7 +1201,20 @@
                     });
                     break;
                 case 'favorites':
-                    filtered = filtered.filter(channel => channel.isFavorite);
+                    filtered = state.favorites.map(fav => {
+                        const channel = state.channels.find(c => c.number === fav.number);
+                        if (channel) return channel;
+                        return {
+                            name: fav.name,
+                            number: fav.number,
+                            time: '',
+                            event: '',
+                            url: `https://daddylivehd1.click/embed/stream-${fav.number}.php`,
+                            rawText: fav.name,
+                            isFavorite: true,
+                            isSecondary: false
+                        };
+                    }).filter(Boolean);
                     break;
             }
             
@@ -1242,7 +1253,20 @@
                     return diffMinutes >= -30 && diffMinutes <= 240;
                 });
             } else if (state.currentFilter === 'favorites') {
-                channelsToShow = state.channels.filter(c => c.isFavorite);
+                channelsToShow = state.favorites.map(fav => {
+                    const channel = state.channels.find(c => c.number === fav.number);
+                    if (channel) return channel;
+                    return {
+                        name: fav.name,
+                        number: fav.number,
+                        time: '',
+                        event: '',
+                        url: `https://daddylivehd1.click/embed/stream-${fav.number}.php`,
+                        rawText: fav.name,
+                        isFavorite: true,
+                        isSecondary: false
+                    };
+                }).filter(Boolean);
             } else {
                 channelsToShow = [...state.channels];
             }
@@ -1342,10 +1366,11 @@
                 state.favorites[existingIndex].name = favoriteName;
             }
             
-            const channelIndex = state.channels.findIndex(c => c.number === state.currentStream.number);
-            if (channelIndex !== -1) {
-                state.channels[channelIndex].isFavorite = true;
-            }
+            state.channels.forEach(channel => {
+                if (channel.number === state.currentStream.number) {
+                    channel.isFavorite = true;
+                }
+            });
             
             localStorage.setItem('daddyliveFavorites', JSON.stringify(state.favorites));
             elements.favoriteBtn.classList.add('active');
@@ -1355,6 +1380,7 @@
             }
             
             hideFavoriteModal();
+            showNotification('Favorito guardado');
         }
 
         function removeFavorite(channelNumber) {
@@ -1517,7 +1543,8 @@
                 clearTimeout(state.longPressTimer);
             });
             
-            elements.favoriteBtn.addEventListener('click', () => {
+            elements.favoriteBtn.addEventListener('click', (e) => {
+                clearTimeout(state.longPressTimer);
                 if (!state.currentStream) return;
                 
                 if (!state.currentStream.isFavorite) {
