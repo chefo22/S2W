@@ -424,6 +424,10 @@
             padding: 0.8rem;
         }
 
+        .channel-group-content.single-channel {
+            grid-template-columns: 1fr;
+        }
+
         .loading {
             position: fixed;
             top: 0;
@@ -1085,13 +1089,13 @@
                             ${groupChannels.length} canales
                         </div>
                     </div>
-                    <div class="channel-group-content"></div>
+                    <div class="channel-group-content ${groupChannels.length === 1 ? 'single-channel' : ''}"></div>
                 `;
                 
                 const groupContent = groupElement.querySelector('.channel-group-content');
                 
                 groupChannels.forEach(channel => {
-                    const channelCard = createChannelCard(channel);
+                    const channelCard = createChannelCard(channel, true);
                     groupContent.appendChild(channelCard);
                 });
                 
@@ -1101,26 +1105,36 @@
 
         function renderUngroupedChannels(channels) {
             channels.forEach(channel => {
-                const channelCard = createChannelCard(channel);
+                const channelCard = createChannelCard(channel, false);
                 elements.channelsGrid.appendChild(channelCard);
             });
         }
 
-        function createChannelCard(channel) {
+        function createChannelCard(channel, isGrouped) {
             const channelCard = document.createElement('div');
             channelCard.className = `channel-card ${channel.time === 'LIVE' ? 'live' : ''}`;
             channelCard.dataset.id = channel.number;
             
-            channelCard.innerHTML = `
-                <div class="channel-header">
-                    <div class="channel-time ${channel.time ? 'live' : ''}">
-                        ${channel.time || 'LIVE'}
+            if (isGrouped) {
+                channelCard.innerHTML = `
+                    <div class="channel-header">
+                        <div class="channel-time ${channel.time ? 'live' : ''}"></div>
+                        <h3 class="channel-name">${channel.name}</h3>
+                        <div class="channel-number">CH-${channel.number}</div>
                     </div>
-                    <h3 class="channel-name">${channel.name}</h3>
-                    <div class="channel-number">CH-${channel.number}</div>
-                </div>
-                <p class="channel-event">${channel.event}</p>
-            `;
+                `;
+            } else {
+                channelCard.innerHTML = `
+                    <div class="channel-header">
+                        <div class="channel-time ${channel.time ? 'live' : ''}">
+                            ${channel.time || 'LIVE'}
+                        </div>
+                        <h3 class="channel-name">${channel.name}</h3>
+                        <div class="channel-number">CH-${channel.number}</div>
+                    </div>
+                    <p class="channel-event">${channel.event}</p>
+                `;
+            }
             
             channelCard.addEventListener('click', () => playChannel(channel));
             
