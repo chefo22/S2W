@@ -1085,9 +1085,6 @@
                             </span>
                             ${event || 'Evento no especificado'}
                         </div>
-                        <div class="channel-group-count">
-                            ${groupChannels.length} canales
-                        </div>
                     </div>
                     <div class="channel-group-content ${groupChannels.length === 1 ? 'single-channel' : ''}"></div>
                 `;
@@ -1120,7 +1117,7 @@
                     <div class="channel-header">
                         <div class="channel-time ${channel.time ? 'live' : ''}"></div>
                         <h3 class="channel-name">${channel.name}</h3>
-                        <div class="channel-number">CH-${channel.number}</div>
+                        <div class="channel-number">${channel.number}</div>
                     </div>
                 `;
             } else {
@@ -1130,7 +1127,7 @@
                             ${channel.time || 'LIVE'}
                         </div>
                         <h3 class="channel-name">${channel.name}</h3>
-                        <div class="channel-number">CH-${channel.number}</div>
+                        <div class="channel-number">${channel.number}</div>
                     </div>
                     <p class="channel-event">${channel.event}</p>
                 `;
@@ -1266,7 +1263,7 @@
                 channelItem.innerHTML = `
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                         <strong>${channel.name}</strong>
-                        <span>CH-${channel.number}</span>
+                        <span>${channel.number}</span>
                     </div>
                     <div style="font-size: 0.9rem; color: var(--text-light);">
                         ${channel.time || 'LIVE'} ${channel.event}
@@ -1292,7 +1289,7 @@
                 currentChannelItem.innerHTML = `
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                         <strong>${state.currentStream.name}</strong>
-                        <span>CH-${state.currentStream.number}</span>
+                        <span>${state.currentStream.number}</span>
                     </div>
                     <div style="font-size: 0.9rem; color: var(--text-light);">
                         ${state.currentStream.time || 'LIVE'} ${state.currentStream.event}
@@ -1600,6 +1597,17 @@
             if (typeof Hls === 'undefined') {
                 const script = document.createElement('script');
                 script.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest';
+                script.onload = init;
+                document.head.appendChild(script);
+            } else {
+                init();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadHLS);
+    </script>
+</body>
+</html>.jsdelivr.net/npm/hls.js@latest';
                 script.onload = init;
                 document.head.appendChild(script);
             } else {
