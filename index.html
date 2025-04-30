@@ -424,53 +424,6 @@
             padding: 0.8rem;
         }
 
-        .floating-buttons {
-            position: fixed;
-            bottom: 15px;
-            right: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            z-index: 100;
-        }
-
-        .floating-btn {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            box-shadow: var(--shadow-md);
-            transition: all 0.2s;
-        }
-
-        .floating-btn:hover {
-            transform: scale(1.1);
-        }
-
-        .dark-mode-btn {
-            background: var(--primary);
-            color: white;
-        }
-
-        .premium-btn {
-            background: var(--success);
-            color: white;
-        }
-
-        .premium-btn.active {
-            background: var(--warning);
-        }
-
-        .fullscreen-btn {
-            background: var(--danger);
-            color: white;
-        }
-
         .loading {
             position: fixed;
             top: 0;
@@ -724,12 +677,6 @@
         </div>
     </div>
 
-    <div class="floating-buttons">
-        <button class="floating-btn dark-mode-btn" id="darkModeBtn">🌙</button>
-        <button class="floating-btn premium-btn" id="premiumBtn" title="Usar servidor premium">⭐</button>
-        <button class="floating-btn fullscreen-btn" id="fullscreenBtn">⛶</button>
-    </div>
-
     <div class="update-notification" id="updateNotification">
         Canales actualizados correctamente
     </div>
@@ -778,9 +725,6 @@
             channelListBtn: document.getElementById('channelListBtn'),
             closePlayerBtn: document.getElementById('closePlayerBtn'),
             loading: document.getElementById('loading'),
-            darkModeBtn: document.getElementById('darkModeBtn'),
-            premiumBtn: document.getElementById('premiumBtn'),
-            fullscreenBtn: document.getElementById('fullscreenBtn'),
             statusBadge: document.querySelector('.status-badge'),
             channelCount: document.getElementById('channelCount'),
             channelListModal: document.getElementById('channelListModal'),
@@ -797,7 +741,6 @@
         function init() {
             if (state.isDarkMode) {
                 document.body.classList.add('dark-mode');
-                elements.darkModeBtn.textContent = '☀️';
             }
 
             state.favorites = JSON.parse(localStorage.getItem('daddyliveFavorites')) || [];
@@ -806,8 +749,6 @@
             loadBackupChannels();
             
             setTimeout(loadChannels, 1000);
-            
-            elements.premiumBtn.classList.toggle('active', state.usePremium);
             
             loadPremiumLinks();
         }
@@ -885,7 +826,6 @@
         function togglePremiumMode() {
             state.usePremium = !state.usePremium;
             localStorage.setItem('usePremium', state.usePremium);
-            elements.premiumBtn.classList.toggle('active', state.usePremium);
             
             if (state.currentStream) {
                 playChannel(state.currentStream);
@@ -1510,6 +1450,10 @@
                         toggleGroupMode();
                         elements.searchInput.value = '';
                         return;
+                    } else if (value === '&P') {
+                        togglePremiumMode();
+                        elements.searchInput.value = '';
+                        return;
                     }
                     
                     if (/^#?\d+$/.test(value)) {
@@ -1539,10 +1483,6 @@
                     }
                 }
             });
-            
-            elements.darkModeBtn.addEventListener('click', toggleDarkMode);
-            
-            elements.premiumBtn.addEventListener('click', togglePremiumMode);
             
             elements.closePlayerBtn.addEventListener('click', closePlayer);
             
@@ -1575,14 +1515,6 @@
             });
             
             elements.channelListBtn.addEventListener('click', showChannelList);
-            
-            elements.fullscreenBtn.addEventListener('click', () => {
-                if (document.fullscreenElement) {
-                    document.exitFullscreen();
-                } else {
-                    document.documentElement.requestFullscreen();
-                }
-            });
             
             elements.closeChannelListBtn.addEventListener('click', hideChannelList);
             elements.channelListSearch.addEventListener('input', () => {
@@ -1630,7 +1562,6 @@
         function toggleDarkMode() {
             state.isDarkMode = !state.isDarkMode;
             document.body.classList.toggle('dark-mode', state.isDarkMode);
-            elements.darkModeBtn.textContent = state.isDarkMode ? '☀️' : '🌙';
             localStorage.setItem('darkMode', state.isDarkMode);
         }
 
