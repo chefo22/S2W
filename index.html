@@ -628,7 +628,7 @@
         <section class="search-filters">
             <div class="search-box">
                 <span class="search-icon">🔍</span>
-                <input type="text" id="searchInput" placeholder="Buscar canales o ingresar número (ej: #123)">
+                <input type="text" id="searchInput" placeholder="Buscar canales, número (ej: #123) o hora (ej: 15:30)">
             </div>
             
             <div class="filter-buttons">
@@ -1177,11 +1177,16 @@
                 if (/^#?\d+$/.test(searchTerm)) {
                     const channelNumber = searchTerm.replace('#', '');
                     filtered = filtered.filter(channel => channel.number === channelNumber);
+                } else if (/^\d{1,2}:\d{2}$/.test(searchTerm)) {
+                    filtered = filtered.filter(channel => 
+                        channel.time && channel.time.toLowerCase().includes(searchTerm)
+                    );
                 } else {
                     filtered = filtered.filter(channel => 
                         channel.name.toLowerCase().includes(searchTerm) || 
                         channel.event.toLowerCase().includes(searchTerm) ||
-                        channel.number.includes(searchTerm)
+                        channel.number.includes(searchTerm) ||
+                        (channel.time && channel.time.toLowerCase().includes(searchTerm))
                     );
                 }
             }
@@ -1276,7 +1281,8 @@
                 ? channelsToShow.filter(c => 
                     c.name.toLowerCase().includes(searchTerm) || 
                     c.number.includes(searchTerm) ||
-                    c.event.toLowerCase().includes(searchTerm))
+                    c.event.toLowerCase().includes(searchTerm) ||
+                    (c.time && c.time.toLowerCase().includes(searchTerm)))
                 : channelsToShow;
             
             let currentChannelFound = false;
