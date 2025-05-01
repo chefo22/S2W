@@ -803,7 +803,7 @@
                         
                         if (href && (channelNumMatch || channelNameMatch)) {
                             const channelId = channelNumMatch ? channelNumMatch[1] : channelNameMatch[1].toLowerCase().replace(/\s+/g, '');
-                            serverLinks[channelId] = server;
+                            serverLinks[channelId] = href.startsWith('http') ? href : server + href;
                         }
                     });
                     
@@ -820,7 +820,8 @@
         function findServerWithChannel(channelNumber) {
             for (const server in state.premiumLinks) {
                 if (state.premiumLinks[server][channelNumber]) {
-                    return state.premiumLinks[server][channelNumber];
+                    const fullUrl = state.premiumLinks[server][channelNumber];
+                    return fullUrl;
                 }
             }
             
@@ -829,7 +830,8 @@
                 const channelNameKey = channel.name.toLowerCase().replace(/\s+/g, '');
                 for (const server in state.premiumLinks) {
                     if (state.premiumLinks[server][channelNameKey]) {
-                        return state.premiumLinks[server][channelNameKey];
+                        const fullUrl = state.premiumLinks[server][channelNameKey];
+                        return fullUrl;
                     }
                 }
             }
@@ -862,11 +864,11 @@
             elements.loading.classList.add('active');
             
             if (state.usePremium) {
-                const serverUrl = findServerWithChannel(channel.number);
+                const premiumUrl = findServerWithChannel(channel.number);
                 
-                if (serverUrl) {
+                if (premiumUrl) {
                     elements.loading.classList.remove('active');
-                    elements.playerContainer.innerHTML = `<iframe id="videoFrame" src="${serverUrl}" allowfullscreen></iframe>`;
+                    elements.playerContainer.innerHTML = `<iframe id="videoFrame" src="${premiumUrl}" allowfullscreen></iframe>`;
                     return;
                 } else {
                     showNotification('No se encontró el canal en servidores premium');
