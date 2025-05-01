@@ -795,10 +795,14 @@
                     const serverLinks = {};
                     links.forEach(link => {
                         const href = link.getAttribute('href');
-                        if (href && href.match(/premium\d+/i)) {
-                            const channelNum = href.match(/premium(\d+)/i)[1];
-                            const fullUrl = `${server}${href}mono.m3u8`;
-                            serverLinks[channelNum] = fullUrl;
+                        const text = link.textContent.trim();
+                        
+                        const channelNumMatch = href.match(/premium(\d+)/i);
+                        const channelNameMatch = text.match(/^([A-Za-z0-9]+)/i);
+                        
+                        if (href && (channelNumMatch || channelNameMatch)) {
+                            const channelId = channelNumMatch ? channelNumMatch[1] : channelNameMatch[1].toLowerCase().replace(/\s+/g, '');
+                            serverLinks[channelId] = server;
                         }
                     });
                     
@@ -812,16 +816,21 @@
             }
         }
 
-        function getPremiumLink(channelNumber) {
+        function findServerWithChannel(channelNumber) {
             for (const server in state.premiumLinks) {
                 if (state.premiumLinks[server][channelNumber]) {
                     return state.premiumLinks[server][channelNumber];
                 }
             }
             
-            if (state.premiumServers.length > 0) {
-                const baseUrl = state.premiumServers[0];
-                return `${baseUrl}premium${channelNumber}/mono.m3u8`;
+            const channel = state.channels.find(c => c.number === channelNumber);
+            if (channel) {
+                const channelNameKey = channel.name.toLowerCase().replace(/\s+/g, '');
+                for (const server in state.premiumLinks) {
+                    if (state.premiumLinks[server][channelNameKey]) {
+                        return state.premiumLinks[server][channelNameKey];
+                    }
+                }
             }
             
             return null;
@@ -852,80 +861,20 @@
             elements.loading.classList.add('active');
             
             if (state.usePremium) {
-                const premiumLink = getPremiumLink(channel.number);
-                if (premiumLink) {
-                    playM3U8Stream(premiumLink);
+                const serverUrl = findServerWithChannel(channel.number);
+                
+                if (serverUrl) {
+                    const channelUrl = `${serverUrl}premium${channel.number}/`;
+                    elements.loading.classList.remove('active');
+                    elements.playerContainer.innerHTML = `<iframe id="videoFrame" src="${channelUrl}" allowfullscreen></iframe>`;
                     return;
                 } else {
-                    showNotification('No se encontró enlace premium para este canal');
+                    showNotification('No se encontró el canal en servidores premium');
                 }
             }
             
             elements.loading.classList.remove('active');
             elements.playerContainer.innerHTML = '<iframe id="videoFrame" src="https://daddylivehd1.click/tv/albaplayer/stream-'+channel.number+'/?serv=1/" allowfullscreen></iframe>';
-        }
-
-        function playM3U8Stream(url) {
-            if (Hls.isSupported()) {
-                state.hls = new Hls({
-                    maxBufferLength: 30,
-                    maxMaxBufferLength: 600,
-                    maxBufferSize: 60 * 1000 * 1000,
-                    maxBufferHole: 5.0,
-                    lowLatencyMode: false,
-                    enableWorker: true,
-                    xhrSetup: function(xhr) {
-                        xhr.setRequestHeader('Referer', 'https://daddylivehd1.click/');
-                        xhr.setRequestHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
-                        xhr.withCredentials = true;
-                    }
-                });
-                
-                state.hls.loadSource(url);
-                state.hls.attachMedia(elements.videoPlayer);
-                
-                state.hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                    elements.loading.classList.remove('active');
-                    elements.videoPlayer.play().catch(e => {
-                        console.error('Error al reproducir:', e);
-                        showNotification('Error al iniciar reproducción');
-                        playOriginalChannel(state.currentStream);
-                    });
-                });
-                
-                state.hls.on(Hls.Events.ERROR, function(event, data) {
-                    console.error('HLS Error:', data);
-                    if (data.fatal) {
-                        switch(data.type) {
-                            case Hls.ErrorTypes.NETWORK_ERROR:
-                                showNotification('Error de red, intentando reconectar...');
-                                state.hls.startLoad();
-                                break;
-                            case Hls.ErrorTypes.MEDIA_ERROR:
-                                showNotification('Error de medios, intentando recuperar...');
-                                state.hls.recoverMediaError();
-                                break;
-                            default:
-                                showNotification('Error irrecoverable, cambiando a método alternativo');
-                                playOriginalChannel(state.currentStream);
-                                break;
-                        }
-                    }
-                });
-            } else if (elements.videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
-                elements.videoPlayer.src = url;
-                elements.videoPlayer.addEventListener('loadedmetadata', function() {
-                    elements.loading.classList.remove('active');
-                    elements.videoPlayer.play().catch(e => {
-                        console.error('Error al reproducir en Safari:', e);
-                        showNotification('Error al iniciar reproducción');
-                        playOriginalChannel(state.currentStream);
-                    });
-                });
-            } else {
-                showNotification('Tu navegador no soporta streams HLS');
-                playOriginalChannel(state.currentStream);
-            }
         }
 
         function playOriginalChannel(channel) {
