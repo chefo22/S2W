@@ -864,9 +864,8 @@
                 const serverUrl = findServerWithChannel(channel.number);
                 
                 if (serverUrl) {
-                    const channelUrl = `${serverUrl}premium${channel.number}/`;
                     elements.loading.classList.remove('active');
-                    elements.playerContainer.innerHTML = `<iframe id="videoFrame" src="${channelUrl}" allowfullscreen></iframe>`;
+                    elements.playerContainer.innerHTML = `<iframe id="videoFrame" src="${serverUrl}" allowfullscreen></iframe>`;
                     return;
                 } else {
                     showNotification('No se encontró el canal en servidores premium');
