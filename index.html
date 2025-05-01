@@ -862,9 +862,7 @@
             }
             
             elements.loading.classList.remove('active');
-            elements.playerContainer.innerHTML = '<iframe id="videoFrame" src="about:blank" allowfullscreen></iframe>';
-            elements.videoFrame = document.getElementById('videoFrame');
-            elements.videoFrame.src = `https://daddylivehd1.click/embed/stream-${channel.number}.php`;
+            elements.playerContainer.innerHTML = '<iframe id="videoFrame" src="https://daddylivehd1.click/tv/albaplayer/stream-'+channel.number+'/?serv=1/" allowfullscreen></iframe>';
         }
 
         function playM3U8Stream(url) {
@@ -932,9 +930,7 @@
 
         function playOriginalChannel(channel) {
             elements.loading.classList.remove('active');
-            elements.playerContainer.innerHTML = '<iframe id="videoFrame" src="about:blank" allowfullscreen></iframe>';
-            elements.videoFrame = document.getElementById('videoFrame');
-            elements.videoFrame.src = `https://daddylivehd1.click/embed/stream-${channel.number}.php`;
+            elements.playerContainer.innerHTML = '<iframe id="videoFrame" src="https://daddylivehd1.click/tv/albaplayer/stream-'+channel.number+'/?serv=1/" allowfullscreen></iframe>';
         }
 
         function loadChannels() {
