@@ -898,24 +898,40 @@
             const usedServers = new Set();
             
             for (const server in state.premiumLinks) {
-                if (state.premiumLinks[server][channelNumber] && !usedServers.has(server)) {
-                    foundUrls.push(state.premiumLinks[server][channelNumber]);
-                    usedServers.add(server);
-                    if (foundUrls.length >= 2) return foundUrls;
+                for (const [key, url] of Object.entries(state.premiumLinks[server])) {
+                    if (key === channelNumber || url.match(new RegExp(`/premium${channelNumber}(/|$|\\D)`, 'i'))) {
+                        if (!usedServers.has(server)) {
+                            foundUrls.push(url);
+                            usedServers.add(server);
+                            if (foundUrls.length >= 2) return foundUrls;
+                        }
+                        break;
+                    }
                 }
             }
             
-            for (const server in state.premiumLinks) {
-                if (usedServers.has(server)) continue;
+            if (channelName.length >= 2) {
+                const nameVariations = [
+                    channelName.replace(/\s+/g, ''), 
+                    channelName.replace(/\s+/g, '').replace(/\d+/g, ''), 
+                    channelName.replace(/[^a-z]/g, '')
+                ].filter(v => v.length >= 2);
                 
-                for (const key in state.premiumLinks[server]) {
-                    const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+                for (const server in state.premiumLinks) {
+                    if (usedServers.has(server)) continue;
                     
-                    if (normalizedKey.includes(channelName) || channelName.includes(normalizedKey)) {
-                        foundUrls.push(state.premiumLinks[server][key]);
-                        usedServers.add(server);
-                        if (foundUrls.length >= 2) return foundUrls;
-                        break;
+                    for (const [key, url] of Object.entries(state.premiumLinks[server])) {
+                        const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        const nameMatch = nameVariations.some(variation => 
+                            normalizedKey.includes(variation) || variation.includes(normalizedKey)
+                        );
+                        
+                        if (nameMatch) {
+                            foundUrls.push(url);
+                            usedServers.add(server);
+                            if (foundUrls.length >= 2) return foundUrls;
+                            break;
+                        }
                     }
                 }
             }
