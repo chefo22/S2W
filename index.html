@@ -889,26 +889,38 @@
             }
         }
 
-        function findServerWithChannel(channelNumber) {
+        function findPremiumUrls(channelNumber) {
+            const channel = state.channels.find(c => c.number === channelNumber);
+            if (!channel) return [];
+            
+            const channelName = channel.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const foundUrls = [];
+            const usedServers = new Set();
+            
             for (const server in state.premiumLinks) {
-                if (state.premiumLinks[server][channelNumber]) {
-                    const fullUrl = state.premiumLinks[server][channelNumber];
-                    return fullUrl;
+                if (state.premiumLinks[server][channelNumber] && !usedServers.has(server)) {
+                    foundUrls.push(state.premiumLinks[server][channelNumber]);
+                    usedServers.add(server);
+                    if (foundUrls.length >= 2) return foundUrls;
                 }
             }
             
-            const channel = state.channels.find(c => c.number === channelNumber);
-            if (channel) {
-                const channelNameKey = channel.name.toLowerCase().replace(/\s+/g, '');
-                for (const server in state.premiumLinks) {
-                    if (state.premiumLinks[server][channelNameKey]) {
-                        const fullUrl = state.premiumLinks[server][channelNameKey];
-                        return fullUrl;
+            for (const server in state.premiumLinks) {
+                if (usedServers.has(server)) continue;
+                
+                for (const key in state.premiumLinks[server]) {
+                    const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    
+                    if (normalizedKey.includes(channelName) || channelName.includes(normalizedKey)) {
+                        foundUrls.push(state.premiumLinks[server][key]);
+                        usedServers.add(server);
+                        if (foundUrls.length >= 2) return foundUrls;
+                        break;
                     }
                 }
             }
             
-            return null;
+            return foundUrls;
         }
 
         function togglePremiumMode() {
@@ -936,19 +948,29 @@
             elements.loading.classList.add('active');
             
             if (state.usePremium) {
-                const premiumUrl = findServerWithChannel(channel.number);
+                const premiumUrls = findPremiumUrls(channel.number);
                 
-                if (premiumUrl) {
+                if (premiumUrls.length > 0) {
                     elements.loading.classList.remove('active');
-                    elements.playerContainer.innerHTML = `<iframe id="videoFrame" src="${premiumUrl}" allowfullscreen></iframe>`;
+                    
+                    if (premiumUrls.length === 1) {
+                        elements.playerContainer.innerHTML = `<iframe id="videoFrame" src="${premiumUrls[0]}" allowfullscreen></iframe>`;
+                    } else {
+                        const choice = confirm(
+                            `Se encontraron 2 fuentes premium:\n\n` +
+                            `1. ${premiumUrls[0].split('/')[2]}\n` +
+                            `2. ${premiumUrls[1].split('/')[2]}\n\n` +
+                            `¿Quieres usar la primera opción? (Cancelar para usar la segunda)`
+                        );
+                        
+                        const selectedUrl = choice ? premiumUrls[0] : premiumUrls[1];
+                        elements.playerContainer.innerHTML = `<iframe id="videoFrame" src="${selectedUrl}" allowfullscreen></iframe>`;
+                    }
                     return;
-                } else {
-                    showNotification('No se encontró el canal en servidores premium');
                 }
             }
             
-            elements.loading.classList.remove('active');
-            elements.playerContainer.innerHTML = '<iframe id="videoFrame" src="https://daddylivehd1.click/tv/albaplayer/stream-'+channel.number+'/?serv=1/" allowfullscreen></iframe>';
+            playOriginalChannel(channel);
         }
 
         function playOriginalChannel(channel) {
