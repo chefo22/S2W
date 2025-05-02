@@ -988,6 +988,22 @@
             elements.playerContainer.innerHTML = '<iframe id="videoFrame" src="https://daddylivehd1.click/tv/albaplayer/stream-'+channel.number+'/?serv=1/" allowfullscreen></iframe>';
         }
 
+        function extractCurrentDate(htmlContent) {
+            try {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlContent, 'text/html');
+                const dateElement = doc.querySelector('h2[style*="background-color: #ff0000"]');
+                if (dateElement) {
+                    const dateText = dateElement.textContent.split('–')[0].trim();
+                    return dateText || 'Fecha no disponible';
+                }
+                return 'Fecha no disponible';
+            } catch (error) {
+                console.error('Error al extraer la fecha:', error);
+                return 'Fecha no disponible';
+            }
+        }
+
         function loadChannels() {
             state.isLoading = true;
             
@@ -1010,6 +1026,8 @@
                             updateSystemStatus('healthy');
                             updateChannelCount();
                             
+                            const currentDate = extractCurrentDate(data.contents);
+                            elements.updateNotification.textContent = `Canales actualizados correctamente (${currentDate})`;
                             elements.updateNotification.style.display = 'block';
                             setTimeout(() => {
                                 elements.updateNotification.style.display = 'none';
