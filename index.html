@@ -911,22 +911,16 @@
             }
             
             if (channelName.length >= 2) {
-                const nameVariations = [
-                    channelName.replace(/\s+/g, ''), 
-                    channelName.replace(/\s+/g, '').replace(/\d+/g, ''), 
-                    channelName.replace(/[^a-z]/g, '')
-                ].filter(v => v.length >= 2);
-                
                 for (const server in state.premiumLinks) {
                     if (usedServers.has(server)) continue;
                     
                     for (const [key, url] of Object.entries(state.premiumLinks[server])) {
                         const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
-                        const nameMatch = nameVariations.some(variation => 
-                            normalizedKey.includes(variation) || variation.includes(normalizedKey)
-                        );
+                        const normalizedUrl = url.toLowerCase();
                         
-                        if (nameMatch) {
+                        if (!normalizedUrl.includes('premium') && 
+                            (normalizedUrl.includes(`/${channelName}`) || 
+                             normalizedUrl.includes(`${channelName}/`))) {
                             foundUrls.push(url);
                             usedServers.add(server);
                             if (foundUrls.length >= 2) return foundUrls;
