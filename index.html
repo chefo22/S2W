@@ -576,35 +576,6 @@
             margin-top: 1rem;
         }
 
-        .toggle-sticky-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            box-shadow: var(--shadow-lg);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            z-index: 99;
-            transition: all 0.3s ease;
-        }
-
-        .toggle-sticky-btn:hover {
-            transform: scale(1.1);
-            background-color: var(--primary-dark);
-        }
-
-        .toggle-sticky-btn.active {
-            background-color: var(--danger);
-        }
-
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -656,14 +627,6 @@
                 right: 15px;
                 text-align: center;
             }
-
-            .toggle-sticky-btn {
-                width: 40px;
-                height: 40px;
-                font-size: 1rem;
-                bottom: 15px;
-                right: 15px;
-            }
         }
     </style>
 </head>
@@ -674,6 +637,9 @@
                 <video id="videoPlayer" controls></video>
             </div>
             <div class="player-controls">
+                <button class="control-btn" title="Canal anterior" id="prevChannelBtn">◄</button>
+                <button class="control-btn" title="Canal siguiente" id="nextChannelBtn">►</button>
+                <button class="control-btn" title="Fijar reproductor" id="toggleStickyBtn">⛊</button>
                 <button class="control-btn" title="Guardar favorito" id="favoriteBtn">★</button>
                 <button class="control-btn" title="Lista de canales" id="channelListBtn">≡</button>
                 <button class="control-btn" title="Cerrar" id="closePlayerBtn">×</button>
@@ -744,8 +710,6 @@
         <div class="spinner"></div>
     </div>
 
-    <button class="toggle-sticky-btn" id="toggleStickyBtn" title="Fijar reproductor">📌</button>
-
     <script>
         const state = {
             channels: [],
@@ -786,6 +750,8 @@
             filterLive: document.getElementById('filterLive'),
             filterFavorites: document.getElementById('filterFavorites'),
             filterGroup: document.getElementById('filterGroup'),
+            prevChannelBtn: document.getElementById('prevChannelBtn'),
+            nextChannelBtn: document.getElementById('nextChannelBtn'),
             favoriteBtn: document.getElementById('favoriteBtn'),
             channelListBtn: document.getElementById('channelListBtn'),
             closePlayerBtn: document.getElementById('closePlayerBtn'),
@@ -819,7 +785,7 @@
             loadPremiumLinks();
 
             toggleStickyPlayer(state.stickyPlayer);
-            elements.toggleStickyBtn.classList.toggle('active', state.stickyPlayer);
+            elements.toggleStickyBtn.innerHTML = state.stickyPlayer ? '⛉' : '⛊';
             elements.toggleStickyBtn.title = state.stickyPlayer ? "Liberar reproductor" : "Fijar reproductor";
         }
 
@@ -827,8 +793,12 @@
             const playerSection = document.querySelector('.player-section');
             if (enable) {
                 playerSection.classList.add('sticky');
+                elements.toggleStickyBtn.innerHTML = '⛉';
+                elements.toggleStickyBtn.title = "Liberar reproductor";
             } else {
                 playerSection.classList.remove('sticky');
+                elements.toggleStickyBtn.innerHTML = '⛊';
+                elements.toggleStickyBtn.title = "Fijar reproductor";
             }
         }
 
@@ -1501,6 +1471,30 @@
             elements.statusBadge.className = 'status-badge ' + (statusMap[status].class || '');
         }
 
+        function navigateChannel(direction) {
+            if (!state.currentStream) return;
+            
+            const currentNumber = parseInt(state.currentStream.number);
+            const newNumber = direction === 'next' ? currentNumber + 1 : currentNumber - 1;
+            
+            const nextChannel = state.channels.find(c => c.number === newNumber.toString());
+            
+            if (nextChannel) {
+                playChannel(nextChannel);
+            } else {
+                // Si no encontramos el canal en la lista, intentamos cargarlo directamente
+                playChannel({
+                    name: `Canal ${newNumber}`,
+                    number: newNumber.toString(),
+                    url: `https://daddylivehd1.click/embed/stream-${newNumber}.php`,
+                    event: '',
+                    time: '',
+                    rawText: `Canal ${newNumber}`,
+                    isSecondary: false
+                });
+            }
+        }
+
         function setupEventListeners() {
             elements.filterAll.addEventListener('click', () => {
                 state.currentFilter = 'all';
@@ -1654,10 +1648,14 @@
                 state.stickyPlayer = !state.stickyPlayer;
                 localStorage.setItem('stickyPlayer', state.stickyPlayer);
                 toggleStickyPlayer(state.stickyPlayer);
-                
-                const btn = document.getElementById('toggleStickyBtn');
-                btn.classList.toggle('active', state.stickyPlayer);
-                btn.title = state.stickyPlayer ? "Liberar reproductor" : "Fijar reproductor";
+            });
+
+            elements.prevChannelBtn.addEventListener('click', () => {
+                navigateChannel('prev');
+            });
+
+            elements.nextChannelBtn.addEventListener('click', () => {
+                navigateChannel('next');
             });
         }
 
