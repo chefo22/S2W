@@ -1119,7 +1119,17 @@
             const sortedGroups = Object.entries(groups).sort((a, b) => {
                 if (a[0].startsWith('LIVE')) return -1;
                 if (b[0].startsWith('LIVE')) return 1;
-                return a[0].localeCompare(b[0]);
+                
+                const [timeA] = a[0].split('|');
+                const [timeB] = b[0].split('|');
+                
+                const [hoursA] = timeA.split(':').map(Number);
+                const [hoursB] = timeB.split(':').map(Number);
+                
+                if (hoursA < 6 && hoursB >= 6) return 1;
+                if (hoursA >= 6 && hoursB < 6) return -1;
+                
+                return timeA.localeCompare(timeB);
             });
             
             sortedGroups.forEach(([groupKey, groupChannels]) => {
