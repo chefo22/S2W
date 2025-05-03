@@ -722,7 +722,7 @@
             isLoading: false,
             longPressTimer: null,
             backupChannels: JSON.parse(localStorage.getItem('daddyliveBackup')) || [],
-            isGrouped: false,
+            isGrouped: localStorage.getItem('isGrouped') === 'true',
             premiumServers: [
                 'https://dokko1new.newkso.ru/dokko1/',
                 'https://zekonew.newkso.ru/zeko/',
@@ -787,6 +787,8 @@
             toggleStickyPlayer(state.stickyPlayer);
             elements.toggleStickyBtn.innerHTML = state.stickyPlayer ? '⛉' : '⛊';
             elements.toggleStickyBtn.title = state.stickyPlayer ? "Liberar reproductor" : "Fijar reproductor";
+            
+            elements.filterGroup.classList.toggle('active', state.isGrouped);
         }
 
         function toggleStickyPlayer(enable) {
@@ -1482,7 +1484,6 @@
             if (nextChannel) {
                 playChannel(nextChannel);
             } else {
-                // Si no encontramos el canal en la lista, intentamos cargarlo directamente
                 playChannel({
                     name: `Canal ${newNumber}`,
                     number: newNumber.toString(),
@@ -1661,6 +1662,7 @@
 
         function toggleGroupMode() {
             state.isGrouped = !state.isGrouped;
+            localStorage.setItem('isGrouped', state.isGrouped);
             elements.filterGroup.classList.toggle('active', state.isGrouped);
             renderChannels();
             
