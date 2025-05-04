@@ -1070,6 +1070,7 @@
                 const doc = parser.parseFromString(htmlContent, 'text/html');
                 const channels = [];
                 const timeRegex = /(\d{2}:\d{2})/;
+                const uniqueChannels = new Set();
 
                 const strongElements = doc.querySelectorAll('strong');
                 
@@ -1094,16 +1095,22 @@
                             const channelName = channelMatch[1].trim();
                             const channelNumber = channelMatch[2];
                             
-                            channels.push({
-                                name: channelName,
-                                number: channelNumber,
-                                time: adjustedTime || '',
-                                event: eventText.replace(timeRegex, '').trim(),
-                                url: link.href,
-                                rawText: linkText,
-                                isFavorite: state.favorites.some(fav => fav.number === channelNumber),
-                                isSecondary: false
-                            });
+                            const channelKey = `${channelNumber}|${channelName}|${adjustedTime}|${eventText.replace(timeRegex, '').trim()}`;
+                            
+                            if (!uniqueChannels.has(channelKey)) {
+                                uniqueChannels.add(channelKey);
+                                
+                                channels.push({
+                                    name: channelName,
+                                    number: channelNumber,
+                                    time: adjustedTime || '',
+                                    event: eventText.replace(timeRegex, '').trim(),
+                                    url: link.href,
+                                    rawText: linkText,
+                                    isFavorite: state.favorites.some(fav => fav.number === channelNumber),
+                                    isSecondary: false
+                                });
+                            }
                         }
                     });
                 });
