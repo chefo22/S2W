@@ -654,7 +654,7 @@
             
             <div class="filter-buttons">
                 <button class="filter-button active" id="filterAll">Todos</button>
-                <button class="filter-button" id="filterLive">En Vivo</button>
+                <button class="filter-button" id="filterLive">Directo</button>
                 <button class="filter-button" id="filterFavorites">Favoritos</button>
                 <button class="filter-button" id="filterGroup">Agrupar</button>
             </div>
@@ -716,7 +716,7 @@
             favorites: JSON.parse(localStorage.getItem('daddyliveFavorites')) || [],
             currentStream: null,
             isDarkMode: localStorage.getItem('darkMode') === 'true',
-            currentFilter: 'all',
+            currentFilter: localStorage.getItem('currentFilter') || 'all',
             playerVisible: false,
             healthCheckInterval: null,
             isLoading: false,
@@ -789,6 +789,27 @@
             elements.toggleStickyBtn.title = state.stickyPlayer ? "Liberar reproductor" : "Fijar reproductor";
             
             elements.filterGroup.classList.toggle('active', state.isGrouped);
+            
+            applyFilter(state.currentFilter);
+        }
+
+        function applyFilter(filter) {
+            state.currentFilter = filter;
+            localStorage.setItem('currentFilter', filter);
+            
+            elements.filterAll.classList.remove('active');
+            elements.filterLive.classList.remove('active');
+            elements.filterFavorites.classList.remove('active');
+            
+            if (filter === 'all') {
+                elements.filterAll.classList.add('active');
+            } else if (filter === 'live') {
+                elements.filterLive.classList.add('active');
+            } else if (filter === 'favorites') {
+                elements.filterFavorites.classList.add('active');
+            }
+            
+            renderChannels();
         }
 
         function toggleStickyPlayer(enable) {
@@ -1265,7 +1286,7 @@
                         eventTime.setHours(hours, minutes, 0, 0);
                         
                         const diffMinutes = (now - eventTime) / (1000 * 60);
-                        return diffMinutes >= -30 && diffMinutes <= 240;
+                        return diffMinutes >= -15 && diffMinutes <= 180;
                     });
                     break;
                 case 'favorites':
@@ -1318,7 +1339,7 @@
                     eventTime.setHours(hours, minutes, 0, 0);
                     
                     const diffMinutes = (now - eventTime) / (1000 * 60);
-                    return diffMinutes >= -30 && diffMinutes <= 240;
+                    return diffMinutes >= -15 && diffMinutes <= 180;
                 });
             } else if (state.currentFilter === 'favorites') {
                 channelsToShow = state.favorites.map(fav => {
@@ -1508,27 +1529,15 @@
 
         function setupEventListeners() {
             elements.filterAll.addEventListener('click', () => {
-                state.currentFilter = 'all';
-                elements.filterAll.classList.add('active');
-                elements.filterLive.classList.remove('active');
-                elements.filterFavorites.classList.remove('active');
-                renderChannels();
+                applyFilter('all');
             });
             
             elements.filterLive.addEventListener('click', () => {
-                state.currentFilter = 'live';
-                elements.filterAll.classList.remove('active');
-                elements.filterLive.classList.add('active');
-                elements.filterFavorites.classList.remove('active');
-                renderChannels();
+                applyFilter('live');
             });
             
             elements.filterFavorites.addEventListener('click', () => {
-                state.currentFilter = 'favorites';
-                elements.filterAll.classList.remove('active');
-                elements.filterLive.classList.remove('active');
-                elements.filterFavorites.classList.add('active');
-                renderChannels();
+                applyFilter('favorites');
             });
             
             elements.filterGroup.addEventListener('click', () => {
