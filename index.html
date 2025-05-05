@@ -798,7 +798,8 @@
             usePremium: localStorage.getItem('usePremium') === 'true',
             serverStatus: {},
             hls: null,
-            stickyPlayer: localStorage.getItem('stickyPlayer') === 'true'
+            stickyPlayer: localStorage.getItem('stickyPlayer') === 'true',
+            fullscreen: localStorage.getItem('fullscreen') === 'true'
         };
 
         const elements = {
@@ -853,6 +854,10 @@
             elements.filterGroup.classList.toggle('active', state.isGrouped);
             
             applyFilter(state.currentFilter);
+
+            if (state.fullscreen) {
+                document.documentElement.requestFullscreen();
+            }
         }
 
         function applyFilter(filter) {
@@ -1623,11 +1628,7 @@
                         elements.searchInput.value = '';
                         return;
                     } else if (value === '&F') {
-                        if (document.fullscreenElement) {
-                            document.exitFullscreen();
-                        } else {
-                            document.documentElement.requestFullscreen();
-                        }
+                        toggleFullscreen();
                         elements.searchInput.value = '';
                         return;
                     } else if (value === '&C') {
@@ -1734,6 +1735,22 @@
             elements.nextChannelBtn.addEventListener('click', () => {
                 navigateChannel('next');
             });
+
+            document.addEventListener('fullscreenchange', () => {
+                state.fullscreen = !!document.fullscreenElement;
+                localStorage.setItem('fullscreen', state.fullscreen);
+            });
+        }
+
+        function toggleFullscreen() {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+                state.fullscreen = false;
+            } else {
+                document.documentElement.requestFullscreen();
+                state.fullscreen = true;
+            }
+            localStorage.setItem('fullscreen', state.fullscreen);
         }
 
         function toggleGroupMode() {
