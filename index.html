@@ -798,8 +798,7 @@
             usePremium: localStorage.getItem('usePremium') === 'true',
             serverStatus: {},
             hls: null,
-            stickyPlayer: localStorage.getItem('stickyPlayer') === 'true',
-            usingBackup: false
+            stickyPlayer: localStorage.getItem('stickyPlayer') === 'true'
         };
 
         const elements = {
@@ -891,7 +890,6 @@
         function loadBackupChannels() {
             if (state.backupChannels.length > 0) {
                 state.channels = state.backupChannels;
-                state.usingBackup = true;
                 renderChannels();
                 updateSystemStatus('healthy');
                 updateChannelCount();
@@ -946,12 +944,9 @@
                     state.serverStatus[server] = 'error';
                 }
             }
-            state.usingBackup = false;
         }
 
         function findPremiumUrls(channelNumber) {
-            if (state.usingBackup) return [];
-            
             const channel = state.channels.find(c => c.number === channelNumber);
             if (!channel) return [];
             
@@ -996,11 +991,6 @@
         }
 
         function togglePremiumMode() {
-            if (state.usingBackup) {
-                showNotification('Modo premium no disponible en copia de seguridad');
-                return;
-            }
-            
             state.usePremium = !state.usePremium;
             localStorage.setItem('usePremium', state.usePremium);
             
@@ -1027,7 +1017,7 @@
             
             elements.loading.classList.add('active');
             
-            if (state.usePremium && !state.usingBackup) {
+            if (state.usePremium) {
                 const premiumUrls = findPremiumUrls(channel.number);
                 
                 if (premiumUrls.length > 0) {
@@ -1092,7 +1082,6 @@
                             state.channels = newChannels;
                             localStorage.setItem('daddyliveBackup', JSON.stringify(newChannels));
                             state.backupChannels = newChannels;
-                            state.usingBackup = false;
                             renderChannels();
                             updateSystemStatus('healthy');
                             updateChannelCount();
@@ -1644,7 +1633,6 @@
                     } else if (value === '&C') {
                         if (state.backupChannels.length > 0) {
                             state.channels = state.backupChannels;
-                            state.usingBackup = true;
                             renderChannels();
                             updateSystemStatus('healthy');
                             updateChannelCount();
