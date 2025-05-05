@@ -718,7 +718,6 @@
                 <button class="filter-button active" id="filterAll">Todos</button>
                 <button class="filter-button" id="filterLive">Directo</button>
                 <button class="filter-button" id="filterFavorites">Favoritos</button>
-                <button class="filter-button" id="filterGroup">Agrupar</button>
             </div>
         </section>
 
@@ -1612,10 +1611,6 @@
             
             elements.filterFavorites.addEventListener('click', () => {
                 applyFilter('favorites');
-            });
-            
-            elements.filterGroup.addEventListener('click', () => {
-                toggleGroupMode();
             });
             
             elements.searchInput.addEventListener('input', () => {
