@@ -183,8 +183,8 @@
             cursor: pointer;
             font-size: 1rem;
             transition: all 0.2s;
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -303,6 +303,27 @@
             background: var(--primary);
             color: white;
             border-color: var(--primary);
+        }
+
+        .filter-favorites {
+            flex: 0 0 auto !important;
+            width: 36px;
+            min-width: 36px !important;
+            padding: 0.5rem 0 !important;
+        }
+
+        @media (max-width: 768px) {
+            .filter-buttons {
+                flex-wrap: nowrap;
+            }
+            .filter-button {
+                min-width: auto;
+                flex: 1;
+            }
+            .filter-favorites {
+                min-width: 36px !important;
+                flex: 0 0 36px !important;
+            }
         }
 
         .channels-grid {
@@ -631,11 +652,18 @@
             }
 
             .filter-buttons {
-                flex-wrap: wrap;
+                flex-wrap: nowrap;
+                gap: 0.6rem;
             }
 
             .filter-button {
-                min-width: calc(50% - 0.3rem);
+                min-width: auto;
+                flex: 1;
+            }
+
+            .filter-favorites {
+                min-width: 36px !important;
+                flex: 0 0 36px !important;
             }
 
             .player-controls {
@@ -717,7 +745,7 @@
             <div class="filter-buttons">
                 <button class="filter-button active" id="filterAll">Todos</button>
                 <button class="filter-button" id="filterLive">Directo</button>
-                <button class="filter-button" id="filterFavorites">Favoritos</button>
+                <button class="filter-button filter-favorites" id="filterFavorites">★</button>
             </div>
         </section>
 
