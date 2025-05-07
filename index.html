@@ -53,7 +53,7 @@
             color: white;
             padding: 1rem 2rem;
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end;
             align-items: center;
             box-shadow: var(--shadow-md);
             position: relative;
@@ -61,30 +61,10 @@
             order: 1;
         }
 
-        .logo {
-            font-size: 1.2rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .logo-icon {
-            width: 25px;
-            height: 25px;
-            background-color: white;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--primary);
-            font-weight: bold;
-        }
-
         .header-actions {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
         }
 
         .status-badge {
@@ -632,15 +612,13 @@
 
         @media (max-width: 768px) {
             .header {
-                flex-direction: column;
-                gap: 8px;
                 padding: 0.8rem;
-                text-align: center;
+                justify-content: center;
             }
 
             .header-actions {
-                flex-direction: column;
-                gap: 6px;
+                flex-direction: row;
+                gap: 15px;
             }
 
             .main-container {
@@ -757,10 +735,6 @@
     </main>
 
     <header class="header">
-        <div class="logo">
-            <span class="logo-icon">DL</span>
-            <span>DaddyLive TV</span>
-        </div>
         <div class="header-actions">
             <span>Estado:</span>
             <span class="status-badge">Cargando...</span>
