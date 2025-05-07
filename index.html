@@ -812,7 +812,6 @@
             filterAll: document.getElementById('filterAll'),
             filterLive: document.getElementById('filterLive'),
             filterFavorites: document.getElementById('filterFavorites'),
-            filterGroup: document.getElementById('filterGroup'),
             prevChannelBtn: document.getElementById('prevChannelBtn'),
             nextChannelBtn: document.getElementById('nextChannelBtn'),
             favoriteBtn: document.getElementById('favoriteBtn'),
@@ -852,8 +851,6 @@
             toggleStickyPlayer(state.stickyPlayer);
             elements.toggleStickyBtn.innerHTML = state.stickyPlayer ? '⛉' : '⛊';
             elements.toggleStickyBtn.title = state.stickyPlayer ? "Liberar reproductor" : "Fijar reproductor";
-            
-            elements.filterGroup.classList.toggle('active', state.isGrouped);
             
             applyFilter(state.currentFilter);
 
@@ -913,20 +910,20 @@
             
             for (const server of state.premiumServers) {
                 try {
-                    const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(server)}`);
+                    const response = await fetch(`https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(server)}`);
                     if (!response.ok) {
                         state.serverStatus[server] = 'error';
                         continue;
                     }
                     
-                    const data = await response.json();
-                    if (!data.contents) {
+                    const data = await response.text();
+                    if (!data) {
                         state.serverStatus[server] = 'error';
                         continue;
                     }
                     
                     const parser = new DOMParser();
-                    const doc = parser.parseFromString(data.contents, 'text/html');
+                    const doc = parser.parseFromString(data, 'text/html');
                     const links = doc.querySelectorAll('a[href*="premium"]');
                     
                     const serverLinks = {};
@@ -1052,7 +1049,7 @@
 
         function playOriginalChannel(channel) {
             elements.loading.classList.remove('active');
-            elements.playerContainer.innerHTML = '<iframe id="videoFrame" src="https://daddylivehd1.click/tv/albaplayer/stream-'+channel.number+'/?serv=1/" allowfullscreen></iframe>';
+            elements.playerContainer.innerHTML = `<iframe id="videoFrame" src="https://daddylivehd1.online/embed/stream-${channel.number}.php" allowfullscreen></iframe>`;
         }
 
         function extractCurrentDate(htmlContent) {
@@ -1075,16 +1072,16 @@
             state.isLoading = true;
             
             const targetUrl = 'https://daddylivehd1.click/';
-            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+            const proxyUrl = `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(targetUrl)}`;
             
             fetch(proxyUrl)
                 .then(response => {
                     if (!response.ok) throw new Error('Error en la conexión');
-                    return response.json();
+                    return response.text();
                 })
                 .then(data => {
-                    if (data.contents) {
-                        const newChannels = extractChannels(data.contents);
+                    if (data) {
+                        const newChannels = extractChannels(data);
                         if (newChannels.length > 0) {
                             state.channels = newChannels;
                             localStorage.setItem('daddyliveBackup', JSON.stringify(newChannels));
@@ -1093,7 +1090,7 @@
                             updateSystemStatus('healthy');
                             updateChannelCount();
                             
-                            const currentDate = extractCurrentDate(data.contents);
+                            const currentDate = extractCurrentDate(data);
                             elements.updateNotification.textContent = `Canales actualizados correctamente (${currentDate})`;
                             elements.updateNotification.style.display = 'block';
                             setTimeout(() => {
@@ -1367,7 +1364,7 @@
                             number: fav.number,
                             time: '',
                             event: '',
-                            url: `https://daddylivehd1.click/embed/stream-${fav.number}.php`,
+                            url: `https://daddylivehd1.online/embed/stream-${fav.number}.php`,
                             rawText: fav.name,
                             isFavorite: true,
                             isSecondary: false
@@ -1419,7 +1416,7 @@
                         number: fav.number,
                         time: '',
                         event: '',
-                        url: `https://daddylivehd1.click/embed/stream-${fav.number}.php`,
+                        url: `https://daddylivehd1.online/embed/stream-${fav.number}.php`,
                         rawText: fav.name,
                         isFavorite: true,
                         isSecondary: false
@@ -1587,7 +1584,7 @@
                 playChannel({
                     name: `Canal ${newNumber}`,
                     number: newNumber.toString(),
-                    url: `https://daddylivehd1.click/embed/stream-${newNumber}.php`,
+                    url: `https://daddylivehd1.online/embed/stream-${newNumber}.php`,
                     event: '',
                     time: '',
                     rawText: `Canal ${newNumber}`,
@@ -1664,7 +1661,7 @@
                         } else {
                             let url, nombre;
                             
-                            url = `https://daddylivehd1.click/embed/stream-${channelNumber}.php`;
+                            url = `https://daddylivehd1.online/embed/stream-${channelNumber}.php`;
                             nombre = `Canal ${channelNumber} (DaddyLive)`;
                             
                             playChannel({
@@ -1758,7 +1755,6 @@
         function toggleGroupMode() {
             state.isGrouped = !state.isGrouped;
             localStorage.setItem('isGrouped', state.isGrouped);
-            elements.filterGroup.classList.toggle('active', state.isGrouped);
             renderChannels();
             
             const message = state.isGrouped ? 'Modo agrupado activado' : 'Modo agrupado desactivado';
