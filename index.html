@@ -801,7 +801,8 @@
             serverStatus: {},
             hls: null,
             stickyPlayer: localStorage.getItem('stickyPlayer') === 'true',
-            fullscreen: localStorage.getItem('fullscreen') === 'true'
+            fullscreen: localStorage.getItem('fullscreen') === 'true',
+            baseDomain: localStorage.getItem('baseDomain') || 'daddylivehd1.online'
         };
 
         const elements = {
@@ -1049,7 +1050,7 @@
 
         function playOriginalChannel(channel) {
             elements.loading.classList.remove('active');
-            elements.playerContainer.innerHTML = `<iframe id="videoFrame" src="https://daddylivehd1.online/embed/stream-${channel.number}.php" allowfullscreen></iframe>`;
+            elements.playerContainer.innerHTML = `<iframe id="videoFrame" src="https://${state.baseDomain}/embed/stream-${channel.number}.php" allowfullscreen></iframe>`;
         }
 
         function extractCurrentDate(htmlContent) {
@@ -1110,11 +1111,6 @@
                 });
         }
 
-        function updateChannelCount() {
-            const count = state.channels.length;
-            elements.channelCount.textContent = `${count} canales`;
-        }
-
         function extractChannels(htmlContent) {
             try {
                 const parser = new DOMParser();
@@ -1122,6 +1118,7 @@
                 const channels = [];
                 const timeRegex = /(\d{2}:\d{2})/;
                 const uniqueChannels = new Set();
+                let domainExtracted = false;
 
                 const strongElements = doc.querySelectorAll('strong');
                 
@@ -1151,6 +1148,15 @@
                             if (!uniqueChannels.has(channelKey)) {
                                 uniqueChannels.add(channelKey);
                                 
+                                if (!domainExtracted && link.href) {
+                                    const domainMatch = link.href.match(/https?:\/\/(daddylivehd[^\/]+)/i);
+                                    if (domainMatch && domainMatch[1]) {
+                                        state.baseDomain = domainMatch[1];
+                                        localStorage.setItem('baseDomain', state.baseDomain);
+                                        domainExtracted = true;
+                                    }
+                                }
+                                
                                 channels.push({
                                     name: channelName,
                                     number: channelNumber,
@@ -1171,6 +1177,11 @@
                 console.error('Error al extraer canales:', error);
                 return [];
             }
+        }
+
+        function updateChannelCount() {
+            const count = state.channels.length;
+            elements.channelCount.textContent = `${count} canales`;
         }
 
         function renderChannels() {
@@ -1364,7 +1375,7 @@
                             number: fav.number,
                             time: '',
                             event: '',
-                            url: `https://daddylivehd1.online/embed/stream-${fav.number}.php`,
+                            url: `https://${state.baseDomain}/embed/stream-${fav.number}.php`,
                             rawText: fav.name,
                             isFavorite: true,
                             isSecondary: false
@@ -1416,7 +1427,7 @@
                         number: fav.number,
                         time: '',
                         event: '',
-                        url: `https://daddylivehd1.online/embed/stream-${fav.number}.php`,
+                        url: `https://${state.baseDomain}/embed/stream-${fav.number}.php`,
                         rawText: fav.name,
                         isFavorite: true,
                         isSecondary: false
@@ -1584,7 +1595,7 @@
                 playChannel({
                     name: `Canal ${newNumber}`,
                     number: newNumber.toString(),
-                    url: `https://daddylivehd1.online/embed/stream-${newNumber}.php`,
+                    url: `https://${state.baseDomain}/embed/stream-${newNumber}.php`,
                     event: '',
                     time: '',
                     rawText: `Canal ${newNumber}`,
@@ -1661,7 +1672,7 @@
                         } else {
                             let url, nombre;
                             
-                            url = `https://daddylivehd1.online/embed/stream-${channelNumber}.php`;
+                            url = `https://${state.baseDomain}/embed/stream-${channelNumber}.php`;
                             nombre = `Canal ${channelNumber} (DaddyLive)`;
                             
                             playChannel({
