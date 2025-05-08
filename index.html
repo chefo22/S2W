@@ -802,7 +802,8 @@
             hls: null,
             stickyPlayer: localStorage.getItem('stickyPlayer') === 'true',
             fullscreen: localStorage.getItem('fullscreen') === 'true',
-            baseDomain: localStorage.getItem('baseDomain') || 'daddylivehd1.online'
+            baseDomain: localStorage.getItem('baseDomain') || 'daddylivehd1.online',
+            useScraping: localStorage.getItem('useScraping') === 'true'
         };
 
         const elements = {
@@ -1069,46 +1070,118 @@
             }
         }
 
-        function loadChannels() {
+        async function loadChannels() {
             state.isLoading = true;
+            let methodUsed = '';
             
-            const targetUrl = 'https://daddylivehd1.click/';
-            const proxyUrl = `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(targetUrl)}`;
-            
-            fetch(proxyUrl)
-                .then(response => {
-                    if (!response.ok) throw new Error('Error en la conexión');
-                    return response.text();
-                })
-                .then(data => {
-                    if (data) {
-                        const newChannels = extractChannels(data);
-                        if (newChannels.length > 0) {
-                            state.channels = newChannels;
-                            localStorage.setItem('daddyliveBackup', JSON.stringify(newChannels));
-                            state.backupChannels = newChannels;
-                            renderChannels();
-                            updateSystemStatus('healthy');
-                            updateChannelCount();
+            try {
+                if (!state.useScraping) {
+                    const jsonData = await loadFromMizTV();
+                    if (jsonData && jsonData.length > 0) {
+                        state.channels = jsonData;
+                        localStorage.setItem('daddyliveBackup', JSON.stringify(jsonData));
+                        state.backupChannels = jsonData;
+                        renderChannels();
+                        updateSystemStatus('healthy');
+                        updateChannelCount();
+                        methodUsed = 'MizTV (JSON)';
+                        showNotification(`Canales cargados desde ${methodUsed}`, 3000);
+                        return;
+                    }
+                }
+                
+                const targetUrl = 'https://daddylivehd1.click/';
+                const proxyUrl = `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(targetUrl)}`;
+                
+                const response = await fetch(proxyUrl);
+                if (!response.ok) throw new Error('Error en la conexión');
+                
+                const data = await response.text();
+                if (data) {
+                    const newChannels = extractChannels(data);
+                    if (newChannels.length > 0) {
+                        state.channels = newChannels;
+                        localStorage.setItem('daddyliveBackup', JSON.stringify(newChannels));
+                        state.backupChannels = newChannels;
+                        renderChannels();
+                        updateSystemStatus('healthy');
+                        updateChannelCount();
+                        
+                        const currentDate = extractCurrentDate(data);
+                        methodUsed = 'DaddyLive (Scraping)';
+                        elements.updateNotification.textContent = `Canales cargados desde ${methodUsed} (${currentDate})`;
+                        elements.updateNotification.style.display = 'block';
+                        setTimeout(() => {
+                            elements.updateNotification.style.display = 'none';
+                        }, 3000);
+                    }
+                }
+            } catch (error) {
+                console.error('Error al actualizar canales:', error);
+                if (state.channels.length === 0) {
+                    updateSystemStatus('unstable');
+                }
+            } finally {
+                state.isLoading = false;
+            }
+        }
+
+        async function loadFromMizTV() {
+            try {
+                const proxyUrl = `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent('https://miztv.top/schedule/schedule-generated.json')}`;
+                const response = await fetch(proxyUrl);
+                if (!response.ok) throw new Error('Error al cargar el JSON de MizTV');
+                
+                const data = await response.json();
+                const channels = [];
+                const uniqueChannels = new Set();
+
+                for (const day in data) {
+                    const dayData = data[day];
+                    
+                    for (const category in dayData) {
+                        const events = dayData[category];
+                        
+                        events.forEach(event => {
+                            let channelSources = [];
                             
-                            const currentDate = extractCurrentDate(data);
-                            elements.updateNotification.textContent = `Canales actualizados correctamente (${currentDate})`;
-                            elements.updateNotification.style.display = 'block';
-                            setTimeout(() => {
-                                elements.updateNotification.style.display = 'none';
-                            }, 3000);
-                        }
+                            if (Array.isArray(event.channels)) {
+                                channelSources = event.channels;
+                            } 
+                            else if (event.channels && typeof event.channels === 'object') {
+                                channelSources = Object.values(event.channels);
+                            }
+                            
+                            channelSources.forEach(channel => {
+                                if (!channel || !channel.channel_id || !channel.channel_name) return;
+                                
+                                const channelKey = `${channel.channel_id}|${channel.channel_name}`;
+                                
+                                if (!uniqueChannels.has(channelKey)) {
+                                    uniqueChannels.add(channelKey);
+                                    
+                                    channels.push({
+                                        name: channel.channel_name,
+                                        number: channel.channel_id,
+                                        time: event.time,
+                                        event: event.event,
+                                        url: `https://miztv.top/stream/stream-${channel.channel_id}.php`,
+                                        rawText: `${channel.channel_name} (CH-${channel.channel_id})`,
+                                        isFavorite: state.favorites.some(fav => fav.number === channel.channel_id),
+                                        isSecondary: false
+                                    });
+                                }
+                            });
+                        });
                     }
-                })
-                .catch(error => {
-                    console.error('Error al actualizar canales:', error);
-                    if (state.channels.length === 0) {
-                        updateSystemStatus('unstable');
-                    }
-                })
-                .finally(() => {
-                    state.isLoading = false;
-                });
+                }
+                
+                return channels;
+                
+            } catch (error) {
+                console.error('Error al cargar desde MizTV:', error);
+                return [];
+            }
         }
 
         function extractChannels(htmlContent) {
@@ -1659,6 +1732,13 @@
                         return;
                     } else if (value === '&P') {
                         togglePremiumMode();
+                        elements.searchInput.value = '';
+                        return;
+                    } else if (value === '&S') {
+                        state.useScraping = !state.useScraping;
+                        localStorage.setItem('useScraping', state.useScraping);
+                        loadChannels();
+                        showNotification(state.useScraping ? 'Modo scraping activado' : 'Modo JSON activado');
                         elements.searchInput.value = '';
                         return;
                     }
