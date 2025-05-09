@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=0.8, maximum-scale=0.8, user-scalable=no">
-    <title>DaddyLive TV | Transmisiones Deportivas en Directo</title>
+    <title>📺</title>
     <style>
+        /* Todos los estilos existentes se mantienen exactamente igual */
         :root {
             --primary: #2563eb;
             --primary-dark: #1e50c7;
@@ -804,7 +805,10 @@
             baseDomain: localStorage.getItem('baseDomain') || 'daddylivehd1.online',
             useScraping: localStorage.getItem('useScraping') === 'true',
             tripleClickTimer: null,
-            clickCount: 0
+            clickCount: 0,
+            knownChannels: JSON.parse(localStorage.getItem('daddyliveKnownChannels')) || {},
+            minValidChannels: 50,
+            backupMode: false
         };
 
         const elements = {
@@ -835,6 +839,119 @@
             channelInfo: document.getElementById('channelInfo'),
             channelNumberDisplay: document.getElementById('channelNumberDisplay')
         };
+
+        function extractChannels(htmlContent) {
+            try {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlContent, 'text/html');
+                const channels = [];
+                const timeRegex = /(\d{2}:\d{2})/;
+                const uniqueChannels = new Set();
+                let domainExtracted = false;
+                let validLinkChannels = 0;
+
+                const strongElements = doc.querySelectorAll('strong');
+                
+                strongElements.forEach(strong => {
+                    let eventText = strong.childNodes[0]?.textContent.trim() || '';
+                    const timeMatch = eventText.match(timeRegex);
+                    let adjustedTime = '';
+                    
+                    if (timeMatch) {
+                        const [hours, minutes] = timeMatch[1].split(':').map(Number);
+                        const adjustedHours = (hours + 1) % 24;
+                        adjustedTime = `${String(adjustedHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                        eventText = eventText.replace(timeMatch[1], adjustedTime);
+                    }
+                    
+                    const links = strong.querySelectorAll('a');
+                    links.forEach(link => {
+                        const linkText = link.textContent.trim();
+                        const channelMatch = linkText.match(/(.+?)\s*\(CH-(\d+)\)/i);
+                        
+                        if (channelMatch) {
+                            const channelName = channelMatch[1].trim();
+                            const channelNumber = channelMatch[2];
+                            
+                            const channelKey = `${channelNumber}|${channelName}|${adjustedTime}|${eventText.replace(timeRegex, '').trim()}`;
+                            
+                            if (!uniqueChannels.has(channelKey)) {
+                                uniqueChannels.add(channelKey);
+                                
+                                if (!domainExtracted && link.href) {
+                                    const domainMatch = link.href.match(/https?:\/\/(daddylivehd[^\/]+)/i);
+                                    if (domainMatch && domainMatch[1]) {
+                                        state.baseDomain = domainMatch[1];
+                                        localStorage.setItem('baseDomain', state.baseDomain);
+                                        domainExtracted = true;
+                                    }
+                                }
+                                
+                                channels.push({
+                                    name: channelName,
+                                    number: channelNumber,
+                                    time: adjustedTime || '',
+                                    event: eventText.replace(timeRegex, '').trim(),
+                                    url: link.href,
+                                    rawText: linkText,
+                                    isFavorite: state.favorites.some(fav => fav.number === channelNumber),
+                                    isSecondary: false
+                                });
+                                
+                                state.knownChannels[channelNumber] = channelName;
+                                validLinkChannels++;
+                            }
+                        }
+                    });
+                });
+
+                const textNodes = [];
+                const walker = document.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT, null, false);
+                let node;
+                while (node = walker.nextNode()) {
+                    if (node.nodeValue.trim().match(/CH-\d+/i)) {
+                        textNodes.push(node.nodeValue.trim());
+                    }
+                }
+
+                textNodes.forEach(text => {
+                    const channelMatch = text.match(/(.+?)\s*\(CH-(\d+)\)/i);
+                    if (channelMatch) {
+                        const channelName = channelMatch[1].trim();
+                        const channelNumber = channelMatch[2];
+                        
+                        if (!state.knownChannels[channelNumber]) {
+                            state.knownChannels[channelNumber] = channelName;
+                        }
+                    }
+                });
+
+                localStorage.setItem('daddyliveKnownChannels', JSON.stringify(state.knownChannels));
+
+                if (validLinkChannels < state.minValidChannels) {
+                    state.backupMode = true;
+                    for (const [number, name] of Object.entries(state.knownChannels)) {
+                        if (!channels.some(c => c.number === number)) {
+                            channels.push({
+                                name: name,
+                                number: number,
+                                time: '',
+                                event: '',
+                                url: `https://${state.baseDomain}/embed/stream-${number}.php`,
+                                rawText: `${name} (CH-${number})`,
+                                isFavorite: state.favorites.some(fav => fav.number === number),
+                                isSecondary: true
+                            });
+                        }
+                    }
+                }
+
+                return channels;
+            } catch (error) {
+                console.error('Error al extraer canales:', error);
+                return [];
+            }
+        }
 
         function init() {
             if (state.isDarkMode) {
@@ -1184,74 +1301,6 @@
             }
         }
 
-        function extractChannels(htmlContent) {
-            try {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(htmlContent, 'text/html');
-                const channels = [];
-                const timeRegex = /(\d{2}:\d{2})/;
-                const uniqueChannels = new Set();
-                let domainExtracted = false;
-
-                const strongElements = doc.querySelectorAll('strong');
-                
-                strongElements.forEach(strong => {
-                    let eventText = strong.childNodes[0]?.textContent.trim() || '';
-                    const timeMatch = eventText.match(timeRegex);
-                    let adjustedTime = '';
-                    
-                    if (timeMatch) {
-                        const [hours, minutes] = timeMatch[1].split(':').map(Number);
-                        const adjustedHours = (hours + 1) % 24;
-                        adjustedTime = `${String(adjustedHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-                        eventText = eventText.replace(timeMatch[1], adjustedTime);
-                    }
-                    
-                    const links = strong.querySelectorAll('a');
-                    links.forEach(link => {
-                        const linkText = link.textContent.trim();
-                        const channelMatch = linkText.match(/(.+?)\s*\(CH-(\d+)\)/i);
-                        
-                        if (channelMatch) {
-                            const channelName = channelMatch[1].trim();
-                            const channelNumber = channelMatch[2];
-                            
-                            const channelKey = `${channelNumber}|${channelName}|${adjustedTime}|${eventText.replace(timeRegex, '').trim()}`;
-                            
-                            if (!uniqueChannels.has(channelKey)) {
-                                uniqueChannels.add(channelKey);
-                                
-                                if (!domainExtracted && link.href) {
-                                    const domainMatch = link.href.match(/https?:\/\/(daddylivehd[^\/]+)/i);
-                                    if (domainMatch && domainMatch[1]) {
-                                        state.baseDomain = domainMatch[1];
-                                        localStorage.setItem('baseDomain', state.baseDomain);
-                                        domainExtracted = true;
-                                    }
-                                }
-                                
-                                channels.push({
-                                    name: channelName,
-                                    number: channelNumber,
-                                    time: adjustedTime || '',
-                                    event: eventText.replace(timeRegex, '').trim(),
-                                    url: link.href,
-                                    rawText: linkText,
-                                    isFavorite: state.favorites.some(fav => fav.number === channelNumber),
-                                    isSecondary: false
-                                });
-                            }
-                        }
-                    });
-                });
-
-                return channels;
-            } catch (error) {
-                console.error('Error al extraer canales:', error);
-                return [];
-            }
-        }
-
         function updateChannelCount() {
             const count = state.channels.length;
             elements.channelCount.textContent = `${count} canales`;
@@ -1279,7 +1328,10 @@
         function renderGroupedChannels(channels) {
             const groups = {};
             
-            channels.forEach(channel => {
+            const channelsWithEvent = channels.filter(channel => channel.event.trim() !== '');
+            const channelsWithoutEvent = channels.filter(channel => channel.event.trim() === '');
+            
+            channelsWithEvent.forEach(channel => {
                 const groupKey = `${channel.time || 'LIVE'}|${channel.event}`;
                 if (!groups[groupKey]) {
                     groups[groupKey] = [];
@@ -1287,7 +1339,15 @@
                 groups[groupKey].push(channel);
             });
             
+            if (channelsWithoutEvent.length > 0) {
+                const noEventGroupKey = 'NO_EVENT|Canales sin evento';
+                groups[noEventGroupKey] = channelsWithoutEvent;
+            }
+            
             const sortedGroups = Object.entries(groups).sort((a, b) => {
+                if (a[0].startsWith('NO_EVENT')) return 1;
+                if (b[0].startsWith('NO_EVENT')) return -1;
+                
                 if (a[0].startsWith('LIVE')) return -1;
                 if (b[0].startsWith('LIVE')) return 1;
                 
@@ -1312,10 +1372,10 @@
                 groupElement.innerHTML = `
                     <div class="channel-group-header">
                         <div class="channel-group-title">
-                            <span class="channel-time ${time === 'LIVE' ? 'live' : ''}">
+                            ${time === 'NO_EVENT' ? '' : `<span class="channel-time ${time === 'LIVE' ? 'live' : ''}">
                                 ${time || 'LIVE'}
-                            </span>
-                            ${event || 'Evento no especificado'}
+                            </span>`}
+                            ${event || 'Canales sin evento'}
                         </div>
                     </div>
                     <div class="channel-group-content ${groupChannels.length === 1 ? 'single-channel' : ''}"></div>
