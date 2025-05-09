@@ -708,7 +708,6 @@
                 <button class="control-btn" title="Canal siguiente" id="nextChannelBtn">►</button>
                 <button class="control-btn" title="Fijar reproductor" id="toggleStickyBtn">⛊</button>
                 <button class="control-btn" title="Guardar favorito" id="favoriteBtn">★</button>
-                <button class="control-btn" title="Lista de canales" id="channelListBtn">≡</button>
                 <button class="control-btn" title="Cerrar" id="closePlayerBtn">×</button>
                 <span class="channel-number-display" id="channelNumberDisplay"></span>
             </div>
@@ -819,7 +818,6 @@
             prevChannelBtn: document.getElementById('prevChannelBtn'),
             nextChannelBtn: document.getElementById('nextChannelBtn'),
             favoriteBtn: document.getElementById('favoriteBtn'),
-            channelListBtn: document.getElementById('channelListBtn'),
             closePlayerBtn: document.getElementById('closePlayerBtn'),
             loading: document.getElementById('loading'),
             statusBadge: document.querySelector('.status-badge'),
@@ -1792,8 +1790,6 @@
                     showFavoriteModal();
                 }
             });
-            
-            elements.channelListBtn.addEventListener('click', showChannelList);
             
             elements.closeChannelListBtn.addEventListener('click', hideChannelList);
             elements.channelListSearch.addEventListener('input', () => {
