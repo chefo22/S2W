@@ -803,7 +803,9 @@
             stickyPlayer: localStorage.getItem('stickyPlayer') === 'true',
             fullscreen: localStorage.getItem('fullscreen') === 'true',
             baseDomain: localStorage.getItem('baseDomain') || 'daddylivehd1.online',
-            useScraping: localStorage.getItem('useScraping') === 'true'
+            useScraping: localStorage.getItem('useScraping') === 'true',
+            tripleClickTimer: null,
+            clickCount: 0
         };
 
         const elements = {
@@ -1367,37 +1369,26 @@
             
             channelCard.addEventListener('click', () => playChannel(channel));
             
-            channelCard.addEventListener('touchstart', (e) => {
+            channelCard.addEventListener('click', (e) => {
                 if (!channel.isFavorite) return;
                 
-                state.longPressTimer = setTimeout(() => {
-                    e.preventDefault();
+                state.clickCount++;
+                
+                if (state.tripleClickTimer) {
+                    clearTimeout(state.tripleClickTimer);
+                }
+                
+                state.tripleClickTimer = setTimeout(() => {
+                    state.clickCount = 0;
+                }, 500);
+                
+                if (state.clickCount === 3) {
+                    state.clickCount = 0;
+                    clearTimeout(state.tripleClickTimer);
                     if (confirm(`¿Eliminar ${channel.name} de favoritos?`)) {
                         removeFavorite(channel.number);
                     }
-                }, 1000);
-            });
-            
-            channelCard.addEventListener('touchend', () => {
-                clearTimeout(state.longPressTimer);
-            });
-            
-            channelCard.addEventListener('mousedown', (e) => {
-                if (!channel.isFavorite) return;
-                
-                state.longPressTimer = setTimeout(() => {
-                    if (confirm(`¿Eliminar ${channel.name} de favoritos?`)) {
-                        removeFavorite(channel.number);
-                    }
-                }, 1000);
-            });
-            
-            channelCard.addEventListener('mouseup', () => {
-                clearTimeout(state.longPressTimer);
-            });
-            
-            channelCard.addEventListener('mouseleave', () => {
-                clearTimeout(state.longPressTimer);
+                }
             });
             
             return channelCard;
