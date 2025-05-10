@@ -813,7 +813,8 @@
             clickCount: 0,
             knownChannels: JSON.parse(localStorage.getItem('daddyliveKnownChannels')) || {},
             minValidChannels: 50,
-            backupMode: false
+            backupMode: false,
+            useProxy: false
         };
 
         const elements = {
@@ -1213,7 +1214,7 @@
                 }
                 
                 const targetUrl = 'https://daddylivehd1.click/';
-                const proxyUrl = `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(targetUrl)}`;
+                const proxyUrl = state.useProxy ? `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(targetUrl)}` : targetUrl;
                 
                 const response = await fetch(proxyUrl);
                 if (!response.ok) throw new Error('Error en la conexión');
@@ -1230,7 +1231,7 @@
                         updateChannelCount();
                         
                         const currentDate = extractCurrentDate(data);
-                        methodUsed = 'DaddyLive (Scraping)';
+                        methodUsed = state.useProxy ? 'DaddyLive (Proxy)' : 'DaddyLive (Directo)';
                         elements.updateNotification.textContent = `Canales cargados desde ${methodUsed} (${currentDate})`;
                         elements.updateNotification.style.display = 'block';
                         setTimeout(() => {
@@ -1250,7 +1251,7 @@
 
         async function loadFromMizTV() {
             try {
-                const proxyUrl = `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent('https://miztv.top/schedule/schedule-generated.json')}`;
+                const proxyUrl = state.useProxy ? `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent('https://miztv.top/schedule/schedule-generated.json')}` : 'https://miztv.top/schedule/schedule-generated.json';
                 const response = await fetch(proxyUrl);
                 if (!response.ok) throw new Error('Error al cargar el JSON de MizTV');
                 
@@ -1793,6 +1794,13 @@
                         localStorage.setItem('useScraping', state.useScraping);
                         loadChannels();
                         showNotification(state.useScraping ? 'Modo scraping activado' : 'Modo JSON activado');
+                        elements.searchInput.value = '';
+                        return;
+                    } else if (value === '&Z') {
+                        state.useProxy = !state.useProxy;
+                        localStorage.setItem('useProxy', state.useProxy);
+                        loadChannels();
+                        showNotification(state.useProxy ? 'Modo proxy activado' : 'Modo proxy desactivado');
                         elements.searchInput.value = '';
                         return;
                     }
