@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=0.8, maximum-scale=0.8, user-scalable=no">
     <title>📺</title>
     <style>
-        /* Todos los estilos existentes se mantienen exactamente igual */
         :root {
             --primary: #2563eb;
             --primary-dark: #1e50c7;
@@ -403,6 +402,9 @@
             padding: 0;
             margin-bottom: 1rem;
             box-shadow: var(--shadow-sm);
+            /* Solución para evitar que los grupos se estiren */
+            align-self: start;
+            height: auto;
         }
 
         .channel-group-header {
@@ -450,6 +452,9 @@
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 0.8rem;
             padding: 0.8rem;
+            /* Solución para mantener el tamaño original */
+            grid-auto-rows: min-content;
+            height: auto !important;
         }
 
         .channel-group-content.single-channel {
@@ -803,7 +808,7 @@
             stickyPlayer: localStorage.getItem('stickyPlayer') === 'true',
             fullscreen: localStorage.getItem('fullscreen') === 'true',
             baseDomain: localStorage.getItem('baseDomain') || 'daddylivehd1.online',
-            useScraping: localStorage.getItem('useScraping') === 'true',
+            useScraping: localStorage.getItem('useScraping') !== 'false',
             tripleClickTimer: null,
             clickCount: 0,
             knownChannels: JSON.parse(localStorage.getItem('daddyliveKnownChannels')) || {},
