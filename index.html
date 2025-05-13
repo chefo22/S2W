@@ -739,7 +739,6 @@
     </div>
 
     <script>
-        // Implementación mejorada del Virtual DOM con keys y diffing optimizado
         class VirtualDOM {
             constructor() {
                 this.currentTree = null;
@@ -838,7 +837,6 @@
             }
         }
 
-        // Implementación del patrón Observer para manejo de estado
         class Observable {
             constructor() {
                 this.observers = [];
@@ -863,7 +861,6 @@
             }
         }
 
-        // Implementación mejorada del patrón Observer con persistencia selectiva
         class EnhancedStore extends Observable {
             setState(newState) {
                 const toPersist = {};
@@ -878,7 +875,6 @@
             }
         }
 
-        // Implementación del patrón Factory para creación de elementos DOM
         class DOMFactory {
             static createChannelCard(channel, isGrouped = false) {
                 const card = document.createElement('div');
@@ -893,7 +889,6 @@
                             <h3 class="channel-name">${channel.name}</h3>
                             <div class="channel-number">${channel.number}</div>
                         </div>
-                        <div class="channel-sport">${channel.sport}</div>
                     `;
                 } else {
                     card.innerHTML = `
@@ -935,7 +930,6 @@
             }
         }
 
-        // Implementación optimizada del patrón Strategy para filtrado con memoización
         const memoize = (fn) => {
             const cache = new Map();
             return (...args) => {
@@ -1011,7 +1005,6 @@
             });
         }
 
-        // Implementación del patrón Facade con optimizaciones
         class TVApp {
             constructor() {
                 this.vdom = new VirtualDOM();
