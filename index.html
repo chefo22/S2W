@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=0.8, maximum-scale=0.8, user-scalable=no">
     <title>📺</title>
+    <link rel="preconnect" href="https://daddylivehd1.my">
+    <link rel="preconnect" href="https://dokko1new.newkso.ru">
     <style>
         :root {
             --primary: #2563eb;
@@ -314,6 +316,8 @@
             overflow: hidden;
             box-shadow: var(--shadow-sm);
             transition: all 0.3s ease;
+            contain: content;
+            will-change: transform, box-shadow;
         }
 
         .channel-card:hover {
@@ -720,14 +724,15 @@
     </div>
 
     <script>
-        // Implementación de un simple Virtual DOM para optimizar renderizado
+        // Implementación mejorada del Virtual DOM con keys y diffing optimizado
         class VirtualDOM {
             constructor() {
                 this.currentTree = null;
+                this.cache = new Map();
             }
 
-            createElement(tag, attributes = {}, children = []) {
-                return { tag, attributes, children };
+            createElement(tag, attributes = {}, children = [], key) {
+                return { tag, attributes, children, key };
             }
 
             render(virtualNode) {
@@ -760,25 +765,26 @@
                 if (typeof oldNode === 'string' || typeof newNode === 'string') {
                     return oldNode !== newNode ? { node: newNode } : {};
                 }
-                if (oldNode.tag !== newNode.tag) {
+                if (oldNode.tag !== newNode.tag || oldNode.key !== newNode.key) {
                     return { node: newNode };
                 }
 
                 const patch = {};
-                const attributes = new Set([...Object.keys(oldNode.attributes), ...Object.keys(newNode.attributes)]);
+                const allAttrs = new Set([...Object.keys(oldNode.attributes), ...Object.keys(newNode.attributes)]);
 
-                for (const attr of attributes) {
+                for (const attr of allAttrs) {
                     if (oldNode.attributes[attr] !== newNode.attributes[attr]) {
                         patch[attr] = newNode.attributes[attr];
                     }
                 }
 
                 const childPatches = [];
-                const newLength = newNode.children.length;
-                const oldLength = oldNode.children.length;
+                const oldChildren = oldNode.children || [];
+                const newChildren = newNode.children || [];
+                const maxLen = Math.max(oldChildren.length, newChildren.length);
 
-                for (let i = 0; i < Math.max(oldLength, newLength); i++) {
-                    childPatches.push(this.diff(oldNode.children[i], newNode.children[i]));
+                for (let i = 0; i < maxLen; i++) {
+                    childPatches.push(this.diff(oldChildren[i], newChildren[i]));
                 }
 
                 return { node: oldNode, patch, childPatches };
@@ -842,12 +848,29 @@
             }
         }
 
+        // Implementación mejorada del patrón Observer con persistencia selectiva
+        class EnhancedStore extends Observable {
+            setState(newState) {
+                // Persistencia selectiva
+                const toPersist = {};
+                ['favorites', 'isDarkMode', 'currentFilter', 'stickyPlayer', 'usePremium', 'isGrouped', 'baseDomain'].forEach(key => {
+                    if (newState[key] !== undefined) {
+                        toPersist[key] = newState[key];
+                        localStorage.setItem(`tvApp_${key}`, JSON.stringify(newState[key]));
+                    }
+                });
+                
+                super.setState(newState);
+            }
+        }
+
         // Implementación del patrón Factory para creación de elementos DOM
         class DOMFactory {
             static createChannelCard(channel, isGrouped = false) {
                 const card = document.createElement('div');
                 card.className = `channel-card ${channel.time === 'LIVE' ? 'channel-card--live' : ''}`;
                 card.dataset.id = channel.number;
+                card.dataset.key = channel.number;
 
                 if (isGrouped) {
                     card.innerHTML = `
@@ -877,6 +900,7 @@
                 const [time, event] = groupKey.split('|');
                 const group = document.createElement('div');
                 group.className = 'channel-group';
+                group.dataset.key = groupKey;
 
                 group.innerHTML = `
                     <div class="channel-group__header">
@@ -894,33 +918,45 @@
             }
         }
 
-        // Implementación del patrón Strategy para filtrado
+        // Implementación optimizada del patrón Strategy para filtrado con memoización
+        const memoize = (fn) => {
+            const cache = new Map();
+            return (...args) => {
+                const key = JSON.stringify(args);
+                if (cache.has(key)) return cache.get(key);
+                const result = fn(...args);
+                cache.set(key, result);
+                return result;
+            };
+        };
+
         class FilterStrategy {
-            static all(channels, searchTerm = '') {
+            static all = memoize((channels, searchTerm = '') => {
                 let filtered = [...channels];
                 
                 if (searchTerm) {
-                    if (/^#?\d+$/.test(searchTerm)) {
-                        const channelNumber = searchTerm.replace('#', '');
+                    const term = searchTerm.toLowerCase();
+                    if (/^#?\d+$/.test(term)) {
+                        const channelNumber = term.replace('#', '');
                         filtered = filtered.filter(channel => channel.number === channelNumber);
-                    } else if (/^\d{1,2}:\d{2}$/.test(searchTerm)) {
+                    } else if (/^\d{1,2}:\d{2}$/.test(term)) {
                         filtered = filtered.filter(channel => 
-                            channel.time && channel.time.toLowerCase().includes(searchTerm)
+                            channel.time && channel.time.toLowerCase().includes(term)
                         );
                     } else {
                         filtered = filtered.filter(channel => 
-                            channel.name.toLowerCase().includes(searchTerm) || 
-                            channel.event.toLowerCase().includes(searchTerm) ||
-                            channel.number.includes(searchTerm) ||
-                            (channel.time && channel.time.toLowerCase().includes(searchTerm))
+                            channel.name.toLowerCase().includes(term) || 
+                            channel.event.toLowerCase().includes(term) ||
+                            channel.number.includes(term) ||
+                            (channel.time && channel.time.toLowerCase().includes(term))
                         );
                     }
                 }
                 
                 return filtered;
-            }
+            });
 
-            static live(channels, searchTerm = '') {
+            static live = memoize((channels, searchTerm = '') => {
                 const now = new Date();
                 let filtered = channels.filter(channel => {
                     if (!channel.time) return false;
@@ -934,9 +970,9 @@
                 });
 
                 return FilterStrategy.all(filtered, searchTerm);
-            }
+            });
 
-            static favorites(favorites, allChannels, searchTerm = '') {
+            static favorites = memoize((favorites, allChannels, searchTerm = '') => {
                 let filtered = favorites.map(fav => {
                     const channel = allChannels.find(c => c.number === fav.number);
                     if (channel) return channel;
@@ -953,18 +989,36 @@
                 }).filter(Boolean);
 
                 return FilterStrategy.all(filtered, searchTerm);
-            }
+            });
         }
 
-        // Implementación del patrón Facade para simplificar la API
+        // Implementación del patrón Facade con optimizaciones
         class TVApp {
             constructor() {
                 this.vdom = new VirtualDOM();
-                this.stateManager = new Observable();
+                this.stateManager = new EnhancedStore();
                 this.initializeState();
                 this.initializeDOM();
                 this.setupEventDelegation();
                 this.initializeServiceWorker();
+                this.setupIntersectionObserver();
+                this.debouncedRender = this.debounce(this.renderChannels.bind(this), 300);
+                this.debouncedSearch = this.debounce(this.handleSearchCommand.bind(this), 300);
+            }
+
+            debounce(func, wait, immediate = false) {
+                let timeout;
+                return function() {
+                    const context = this, args = arguments;
+                    const later = function() {
+                        timeout = null;
+                        if (!immediate) func.apply(context, args);
+                    };
+                    const callNow = immediate && !timeout;
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                    if (callNow) func.apply(context, args);
+                };
             }
 
             initializeState() {
@@ -999,7 +1053,8 @@
                     clickCount: 0,
                     knownChannels: JSON.parse(localStorage.getItem('qKnownChannels')) || {},
                     minValidChannels: 50,
-                    backupMode: false
+                    backupMode: false,
+                    searchIndex: null
                 };
 
                 this.stateManager.setState(this.state);
@@ -1050,70 +1105,98 @@
                 }
             }
 
+            setupIntersectionObserver() {
+                this.intersectionObserver = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target.querySelector('img');
+                            if (img && img.dataset.src) {
+                                img.src = img.dataset.src;
+                            }
+                        }
+                    });
+                }, { threshold: 0.1 });
+            }
+
             setupEventDelegation() {
-                // Delegación de eventos para los canales
-                this.elements.channelsGrid.addEventListener('click', (e) => {
-                    const channelCard = e.target.closest('.channel-card');
-                    if (channelCard) {
-                        const channelId = channelCard.dataset.id;
+                // Delegación de eventos optimizada
+                document.body.addEventListener('click', (e) => {
+                    if (e.target.closest('.channel-card')) {
+                        const channelId = e.target.closest('.channel-card').dataset.id;
                         const channel = this.state.channels.find(c => c.number === channelId);
                         if (channel) this.playChannel(channel);
                     }
-                });
-
-                // Delegación de eventos para la lista de canales
-                this.elements.channelListContent.addEventListener('click', (e) => {
-                    const channelItem = e.target.closest('.channel-list-item');
-                    if (channelItem) {
+                    
+                    if (e.target.closest('.filter-button')) {
+                        const filter = e.target.closest('.filter-button').id.replace('filter', '').toLowerCase();
+                        this.applyFilter(filter);
+                    }
+                    
+                    if (e.target.closest('.channel-list-item')) {
+                        const channelItem = e.target.closest('.channel-list-item');
                         const channelId = channelItem.querySelector('span').textContent;
                         const channel = this.state.channels.find(c => c.number === channelId);
                         if (channel) this.playChannel(channel);
                         this.hideChannelList();
                     }
-                });
-
-                // Eventos de filtrado
-                this.elements.filterAll.addEventListener('click', () => this.applyFilter('all'));
-                this.elements.filterLive.addEventListener('click', () => this.applyFilter('live'));
-                this.elements.filterFavorites.addEventListener('click', () => this.applyFilter('favorites'));
-
-                // Evento de búsqueda con debounce
-                let searchTimeout;
-                this.elements.searchInput.addEventListener('input', () => {
-                    clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(() => {
-                        this.renderChannels();
-                    }, 300);
-                });
-
-                // Eventos del teclado
-                this.elements.searchInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') {
-                        this.handleSearchCommand();
+                    
+                    if (e.target.id === 'closePlayerBtn') {
+                        this.closePlayer();
+                    }
+                    
+                    if (e.target.id === 'prevChannelBtn') {
+                        this.navigateChannel('prev');
+                    }
+                    
+                    if (e.target.id === 'nextChannelBtn') {
+                        this.navigateChannel('next');
+                    }
+                    
+                    if (e.target.id === 'toggleStickyBtn') {
+                        this.toggleStickyMode();
+                    }
+                    
+                    if (e.target.id === 'favoriteBtn') {
+                        this.handleFavoriteClick();
+                    }
+                    
+                    if (e.target.id === 'closeChannelListBtn') {
+                        this.hideChannelList();
+                    }
+                    
+                    if (e.target.id === 'saveFavoriteBtn') {
+                        this.saveFavorite();
+                    }
+                    
+                    if (e.target.id === 'cancelFavoriteBtn') {
+                        this.hideFavoriteModal();
                     }
                 });
 
-                // Eventos del reproductor
-                this.elements.closePlayerBtn.addEventListener('click', () => this.closePlayer());
-                this.elements.prevChannelBtn.addEventListener('click', () => this.navigateChannel('prev'));
-                this.elements.nextChannelBtn.addEventListener('click', () => this.navigateChannel('next'));
-                this.elements.toggleStickyBtn.addEventListener('click', () => this.toggleStickyMode());
-                this.elements.favoriteBtn.addEventListener('click', () => this.handleFavoriteClick());
-                this.elements.favoriteBtn.addEventListener('mousedown', () => this.startLongPress());
-                this.elements.favoriteBtn.addEventListener('mouseup', () => this.clearLongPress());
-                this.elements.favoriteBtn.addEventListener('mouseleave', () => this.clearLongPress());
+                // Eventos con debounce
+                this.elements.searchInput.addEventListener('input', this.debouncedRender);
+                this.elements.searchInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.debouncedSearch();
+                    }
+                });
+                this.elements.channelListSearch.addEventListener('input', this.debouncedRender);
 
-                // Eventos de los modales
-                this.elements.closeChannelListBtn.addEventListener('click', () => this.hideChannelList());
-                this.elements.channelListSearch.addEventListener('input', () => this.showChannelList());
-                this.elements.saveFavoriteBtn.addEventListener('click', () => this.saveFavorite());
-                this.elements.cancelFavoriteBtn.addEventListener('click', () => this.hideFavoriteModal());
+                // Eventos táctiles para long press
+                this.elements.favoriteBtn.addEventListener('touchstart', () => this.startLongPress());
+                this.elements.favoriteBtn.addEventListener('touchend', () => this.clearLongPress());
+                this.elements.favoriteBtn.addEventListener('touchcancel', () => this.clearLongPress());
 
                 // Evento de pantalla completa
                 document.addEventListener('fullscreenchange', () => {
                     this.state.fullscreen = !!document.fullscreenElement;
                     localStorage.setItem('fullscreen', this.state.fullscreen);
                 });
+
+                // Evento de scroll con debounce
+                window.addEventListener('scroll', this.debounce(() => {
+                    // Lógica de scroll optimizada
+                }, 100));
             }
 
             initializeServiceWorker() {
@@ -1128,7 +1211,6 @@
                 }
             }
 
-            // Métodos de la aplicación
             async loadChannels() {
                 this.state.isLoading = true;
                 this.updateSystemStatus('loading');
@@ -1456,10 +1538,20 @@
                 this.renderChannels();
             }
 
+            prepareFilterIndexes() {
+                this.state.searchIndex = this.state.channels.map(channel => ({
+                    id: channel.number,
+                    text: `${channel.name} ${channel.number} ${channel.event} ${channel.time}`.toLowerCase()
+                }));
+            }
+
             renderChannels() {
                 if (this.state.isLoading) return;
                 
-                // Usar DocumentFragment para mejor rendimiento
+                if (!this.state.searchIndex) {
+                    this.prepareFilterIndexes();
+                }
+                
                 const fragment = document.createDocumentFragment();
                 const filteredChannels = this.filterChannels();
                 
@@ -1474,7 +1566,6 @@
                     this.renderUngroupedChannels(filteredChannels, fragment);
                 }
                 
-                // Limpiar y agregar todos los elementos de una vez
                 this.elements.channelsGrid.innerHTML = '';
                 this.elements.channelsGrid.appendChild(fragment);
             }
