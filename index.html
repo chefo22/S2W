@@ -389,6 +389,15 @@
             margin-top: 0.5rem;
         }
 
+        .channel-sport {
+            font-size: 0.7rem;
+            color: var(--primary);
+            margin-top: 0.2rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         .channel-group {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -412,6 +421,12 @@
         .channel-group__title {
             font-weight: 600;
             color: var(--text-dark);
+        }
+
+        .channel-group__sport {
+            font-size: 0.8rem;
+            color: var(--primary);
+            margin-top: 0.2rem;
         }
 
         .channel-group__content {
@@ -851,7 +866,6 @@
         // Implementación mejorada del patrón Observer con persistencia selectiva
         class EnhancedStore extends Observable {
             setState(newState) {
-                // Persistencia selectiva
                 const toPersist = {};
                 ['favorites', 'isDarkMode', 'currentFilter', 'stickyPlayer', 'usePremium', 'isGrouped', 'baseDomain'].forEach(key => {
                     if (newState[key] !== undefined) {
@@ -879,6 +893,7 @@
                             <h3 class="channel-name">${channel.name}</h3>
                             <div class="channel-number">${channel.number}</div>
                         </div>
+                        <div class="channel-sport">${channel.sport}</div>
                     `;
                 } else {
                     card.innerHTML = `
@@ -890,6 +905,7 @@
                             <div class="channel-number">${channel.number}</div>
                         </div>
                         <p class="channel-event">${channel.event}</p>
+                        <div class="channel-sport">${channel.sport}</div>
                     `;
                 }
 
@@ -910,6 +926,7 @@
                             </span>`}
                             ${event || 'Canales sin evento'}
                         </div>
+                        <div class="channel-group__sport">${groupChannels[0]?.sport || 'General'}</div>
                     </div>
                     <div class="channel-group__content ${groupChannels.length === 1 ? 'channel-group__content--single' : ''}"></div>
                 `;
@@ -948,7 +965,8 @@
                             channel.name.toLowerCase().includes(term) || 
                             channel.event.toLowerCase().includes(term) ||
                             channel.number.includes(term) ||
-                            (channel.time && channel.time.toLowerCase().includes(term))
+                            (channel.time && channel.time.toLowerCase().includes(term)) ||
+                            channel.sport.toLowerCase().includes(term)
                         );
                     }
                 }
@@ -981,6 +999,7 @@
                         number: fav.number,
                         time: '',
                         event: '',
+                        sport: 'General',
                         url: `https://${localStorage.getItem('baseDomain') || 'daddylivehd1.my'}/embed/stream-${fav.number}.php`,
                         rawText: fav.name,
                         isFavorite: true,
@@ -1119,7 +1138,6 @@
             }
 
             setupEventDelegation() {
-                // Delegación de eventos optimizada
                 document.body.addEventListener('click', (e) => {
                     if (e.target.closest('.channel-card')) {
                         const channelId = e.target.closest('.channel-card').dataset.id;
@@ -1173,7 +1191,6 @@
                     }
                 });
 
-                // Eventos con debounce
                 this.elements.searchInput.addEventListener('input', this.debouncedRender);
                 this.elements.searchInput.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
@@ -1182,21 +1199,16 @@
                 });
                 this.elements.channelListSearch.addEventListener('input', this.debouncedRender);
 
-                // Eventos táctiles para long press
                 this.elements.favoriteBtn.addEventListener('touchstart', () => this.startLongPress());
                 this.elements.favoriteBtn.addEventListener('touchend', () => this.clearLongPress());
                 this.elements.favoriteBtn.addEventListener('touchcancel', () => this.clearLongPress());
 
-                // Evento de pantalla completa
                 document.addEventListener('fullscreenchange', () => {
                     this.state.fullscreen = !!document.fullscreenElement;
                     localStorage.setItem('fullscreen', this.state.fullscreen);
                 });
 
-                // Evento de scroll con debounce
-                window.addEventListener('scroll', this.debounce(() => {
-                    // Lógica de scroll optimizada
-                }, 100));
+                window.addEventListener('scroll', this.debounce(() => {}, 100));
             }
 
             initializeServiceWorker() {
@@ -1259,11 +1271,17 @@
                     const uniqueChannels = new Set();
                     let domainExtracted = false;
                     let validLinkChannels = 0;
+                    let currentSport = 'General';
 
-                    const strongElements = doc.querySelectorAll('strong');
+                    const elements = doc.querySelectorAll('strong, h2');
                     
-                    strongElements.forEach(strong => {
-                        let eventText = strong.childNodes[0]?.textContent.trim() || '';
+                    elements.forEach(element => {
+                        if (element.tagName === 'H2') {
+                            currentSport = element.textContent.trim();
+                            return;
+                        }
+
+                        let eventText = element.childNodes[0]?.textContent.trim() || '';
                         const timeMatch = eventText.match(timeRegex);
                         let adjustedTime = '';
                         
@@ -1274,7 +1292,7 @@
                             eventText = eventText.replace(timeMatch[1], adjustedTime);
                         }
                         
-                        const links = strong.querySelectorAll('a');
+                        const links = element.querySelectorAll('a');
                         links.forEach(link => {
                             const linkText = link.textContent.trim();
                             const channelMatch = linkText.match(/(.+?)\s*\(CH-(\d+)\)/i);
@@ -1302,6 +1320,7 @@
                                         number: channelNumber,
                                         time: adjustedTime || '',
                                         event: eventText.replace(timeRegex, '').trim(),
+                                        sport: currentSport,
                                         url: link.href,
                                         rawText: linkText,
                                         isFavorite: this.state.favorites.some(fav => fav.number === channelNumber),
@@ -1324,6 +1343,7 @@
                                     number: number,
                                     time: '',
                                     event: '',
+                                    sport: 'General',
                                     url: `https://${this.state.baseDomain}/embed/stream-${number}.php`,
                                     rawText: `${name} (CH-${number})`,
                                     isFavorite: this.state.favorites.some(fav => fav.number === number),
@@ -1541,7 +1561,7 @@
             prepareFilterIndexes() {
                 this.state.searchIndex = this.state.channels.map(channel => ({
                     id: channel.number,
-                    text: `${channel.name} ${channel.number} ${channel.event} ${channel.time}`.toLowerCase()
+                    text: `${channel.name} ${channel.number} ${channel.event} ${channel.time} ${channel.sport}`.toLowerCase()
                 }));
             }
 
@@ -1681,7 +1701,8 @@
                         c.name.toLowerCase().includes(searchTerm) || 
                         c.number.includes(searchTerm) ||
                         c.event.toLowerCase().includes(searchTerm) ||
-                        (c.time && c.time.toLowerCase().includes(searchTerm)))
+                        (c.time && c.time.toLowerCase().includes(searchTerm)) ||
+                        c.sport.toLowerCase().includes(searchTerm))
                     : channelsToShow;
                 
                 let currentChannelFound = false;
@@ -1694,8 +1715,11 @@
                             <strong>${channel.name}</strong>
                             <span>${channel.number}</span>
                         </div>
-                        <div style="font-size: 0.9rem; color: var(--text-light);">
+                        <div style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 0.2rem;">
                             ${channel.time || 'LIVE'} ${channel.event}
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--primary);">
+                            ${channel.sport}
                         </div>
                     `;
                     
@@ -1720,8 +1744,11 @@
                             <strong>${this.state.currentStream.name}</strong>
                             <span>${this.state.currentStream.number}</span>
                         </div>
-                        <div style="font-size: 0.9rem; color: var(--text-light);">
+                        <div style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 0.2rem;">
                             ${this.state.currentStream.time || 'LIVE'} ${this.state.currentStream.event}
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--primary);">
+                            ${this.state.currentStream.sport}
                         </div>
                     `;
                     
@@ -1841,6 +1868,7 @@
                         url: `https://${this.state.baseDomain}/embed/stream-${newNumber}.php`,
                         event: '',
                         time: '',
+                        sport: 'General',
                         rawText: `Canal ${newNumber}`,
                         isSecondary: false
                     });
@@ -1968,6 +1996,7 @@
                             url: `https://${this.state.baseDomain}/embed/stream-${channelNumber}.php`,
                             event: '',
                             time: '',
+                            sport: 'General',
                             rawText: `Canal ${channelNumber}`,
                             isSecondary: false
                         });
@@ -2003,7 +2032,6 @@
             }
         }
 
-        // Inicializar la aplicación cuando el DOM esté listo
         document.addEventListener('DOMContentLoaded', () => {
             const app = new TVApp();
             app.loadBackupChannels();
