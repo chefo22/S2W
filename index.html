@@ -913,6 +913,41 @@
                 group.className = 'channel-group';
                 group.dataset.key = groupKey;
 
+                const sport = groupChannels[0]?.sport || 'General';
+                
+                const sportTranslations = {
+                    'Football': 'Fútbol',
+                    'Soccer': 'Fútbol',
+                    'Basketball': 'Baloncesto',
+                    'Tennis': 'Tenis',
+                    'Baseball': 'Béisbol',
+                    'Hockey': 'Hockey',
+                    'Golf': 'Golf',
+                    'Boxing': 'Boxeo',
+                    'MMA': 'Artes Marciales Mixtas',
+                    'Rugby': 'Rugby',
+                    'Cricket': 'Críquet',
+                    'Volleyball': 'Voleibol',
+                    'Handball': 'Balonmano',
+                    'Cycling': 'Ciclismo',
+                    'Formula 1': 'Fórmula 1',
+                    'MotoGP': 'MotoGP',
+                    'Wrestling': 'Lucha Libre',
+                    'Swimming': 'Natación',
+                    'Athletics': 'Atletismo',
+                    'Snooker': 'Snooker',
+                    'Darts': 'Dardos',
+                    'American Football': 'Fútbol Americano',
+                    'Motorsports': 'Deportes de Motor',
+                    'Winter Sports': 'Deportes de Invierno',
+                    'Water Sports': 'Deportes Acuáticos',
+                    'Extreme Sports': 'Deportes Extremos',
+                    'E-Sports': 'Deportes Electrónicos',
+                    'Other Sports': 'Otros Deportes'
+                };
+
+                const translatedSport = sportTranslations[sport] || sport;
+
                 group.innerHTML = `
                     <div class="channel-group__header">
                         <div class="channel-group__title">
@@ -921,7 +956,7 @@
                             </span>`}
                             ${event || 'Canales sin evento'}
                         </div>
-                        <div class="channel-group__sport">${groupChannels[0]?.sport || 'General'}</div>
+                        <div class="channel-group__sport">${translatedSport}</div>
                     </div>
                     <div class="channel-group__content ${groupChannels.length === 1 ? 'channel-group__content--single' : ''}"></div>
                 `;
@@ -1266,11 +1301,43 @@
                     let validLinkChannels = 0;
                     let currentSport = 'General';
 
+                    const sportTranslations = {
+                        'Football': 'Fútbol',
+                        'Soccer': 'Fútbol',
+                        'Basketball': 'Baloncesto',
+                        'Tennis': 'Tenis',
+                        'Baseball': 'Béisbol',
+                        'Hockey': 'Hockey',
+                        'Golf': 'Golf',
+                        'Boxing': 'Boxeo',
+                        'MMA': 'Artes Marciales Mixtas',
+                        'Rugby': 'Rugby',
+                        'Cricket': 'Críquet',
+                        'Volleyball': 'Voleibol',
+                        'Handball': 'Balonmano',
+                        'Cycling': 'Ciclismo',
+                        'Formula 1': 'Fórmula 1',
+                        'MotoGP': 'MotoGP',
+                        'Wrestling': 'Lucha Libre',
+                        'Swimming': 'Natación',
+                        'Athletics': 'Atletismo',
+                        'Snooker': 'Snooker',
+                        'Darts': 'Dardos',
+                        'American Football': 'Fútbol Americano',
+                        'Motorsports': 'Deportes de Motor',
+                        'Winter Sports': 'Deportes de Invierno',
+                        'Water Sports': 'Deportes Acuáticos',
+                        'Extreme Sports': 'Deportes Extremos',
+                        'E-Sports': 'Deportes Electrónicos',
+                        'Other Sports': 'Otros Deportes'
+                    };
+
                     const elements = doc.querySelectorAll('strong, h2');
                     
                     elements.forEach(element => {
                         if (element.tagName === 'H2') {
-                            currentSport = element.textContent.trim();
+                            const originalSport = element.textContent.trim();
+                            currentSport = sportTranslations[originalSport] || originalSport;
                             return;
                         }
 
@@ -1340,7 +1407,7 @@
                                     url: `https://${this.state.baseDomain}/embed/stream-${number}.php`,
                                     rawText: `${name} (CH-${number})`,
                                     isFavorite: this.state.favorites.some(fav => fav.number === number),
-                                    isSecondary: true
+                                    isSecondary: false
                                 });
                             }
                         }
