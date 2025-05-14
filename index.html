@@ -850,41 +850,50 @@
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(htmlContent, 'text/html');
                 const channels = [];
-                const timeRegex = /(\d{2}:\d{2})/;
                 const uniqueChannels = new Set();
                 let domainExtracted = false;
                 let validLinkChannels = 0;
 
-                const strongElements = doc.querySelectorAll('strong');
+                // Buscar todos los párrafos que contienen información de canales
+                const paragraphs = doc.querySelectorAll('p');
                 
-                strongElements.forEach(strong => {
-                    let eventText = strong.childNodes[0]?.textContent.trim() || '';
-                    const timeMatch = eventText.match(timeRegex);
-                    let adjustedTime = '';
+                paragraphs.forEach(p => {
+                    const lines = p.innerHTML.split('<br />');
                     
-                    if (timeMatch) {
-                        const [hours, minutes] = timeMatch[1].split(':').map(Number);
-                        const adjustedHours = (hours + 1) % 24;
-                        adjustedTime = `${String(adjustedHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-                        eventText = eventText.replace(timeMatch[1], adjustedTime);
-                    }
-                    
-                    const links = strong.querySelectorAll('a');
-                    links.forEach(link => {
-                        const linkText = link.textContent.trim();
-                        const channelMatch = linkText.match(/(.+?)\s*\(CH-(\d+)\)/i);
+                    lines.forEach(line => {
+                        if (!line.trim()) return;
                         
-                        if (channelMatch) {
+                        // Extraer hora y evento (compartidos por todos los canales de esta línea)
+                        const timeMatch = line.match(/(\d{2}:\d{2})/);
+                        const time = timeMatch ? timeMatch[1] : 'LIVE';
+                        
+                        // Extraer el texto del evento (todo antes del primer enlace)
+                        const eventText = line.split('<a')[0].replace(time, '').trim();
+                        
+                        // Extraer todos los enlaces <a> de la línea
+                        const linkMatches = [...line.matchAll(/<a href="([^"]+)"[^>]*>([^<]+)<\/a>/gi)];
+                        
+                        if (!linkMatches || linkMatches.length === 0) return;
+                        
+                        // Procesar cada enlace encontrado
+                        linkMatches.forEach(linkMatch => {
+                            const url = linkMatch[1];
+                            const linkText = linkMatch[2];
+                            
+                            // Extraer nombre del canal y número
+                            const channelMatch = linkText.match(/(.+?)\s*\(CH-(\d+)\)/i);
+                            if (!channelMatch) return;
+                            
                             const channelName = channelMatch[1].trim();
                             const channelNumber = channelMatch[2];
                             
-                            const channelKey = `${channelNumber}|${channelName}|${adjustedTime}|${eventText.replace(timeRegex, '').trim()}`;
+                            const channelKey = `${channelNumber}|${channelName}|${time}|${eventText}`;
                             
                             if (!uniqueChannels.has(channelKey)) {
                                 uniqueChannels.add(channelKey);
                                 
-                                if (!domainExtracted && link.href) {
-                                    const domainMatch = link.href.match(/https?:\/\/(daddylivehd[^\/]+)/i);
+                                if (!domainExtracted && url) {
+                                    const domainMatch = url.match(/https?:\/\/(daddylivehd[^\/]+)/i);
                                     if (domainMatch && domainMatch[1]) {
                                         state.baseDomain = domainMatch[1];
                                         localStorage.setItem('baseDomain', state.baseDomain);
@@ -895,9 +904,9 @@
                                 channels.push({
                                     name: channelName,
                                     number: channelNumber,
-                                    time: adjustedTime || '',
-                                    event: eventText.replace(timeRegex, '').trim(),
-                                    url: link.href,
+                                    time: time,
+                                    event: eventText,
+                                    url: url,
                                     rawText: linkText,
                                     isFavorite: state.favorites.some(fav => fav.number === channelNumber),
                                     isSecondary: false
@@ -906,10 +915,20 @@
                                 state.knownChannels[channelNumber] = channelName;
                                 validLinkChannels++;
                             }
-                        }
+                        });
                     });
                 });
 
+                // Procesar también los encabezados de categoría (como "Soccer")
+                const headers = doc.querySelectorAll('h2');
+                headers.forEach(header => {
+                    const category = header.textContent.trim();
+                    if (category) {
+                        // Podemos usar esta información para agrupar los canales si lo deseamos
+                    }
+                });
+
+                // Procesar canales secundarios como antes
                 const textNodes = [];
                 const walker = document.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT, null, false);
                 let node;
@@ -1212,7 +1231,7 @@
                     }
                 }
                 
-                const targetUrl = 'https://daddylivehd1.click/';
+                const targetUrl = 'https://daddylivehd1.my/';
                 const proxyUrl = `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(targetUrl)}`;
                 
                 const response = await fetch(proxyUrl);
