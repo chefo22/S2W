@@ -1219,7 +1219,9 @@
                     }
                 });
 
-                this.elements.searchInput.addEventListener('input', this.debouncedRender);
+                this.elements.searchInput.addEventListener('input', () => {
+                    this.debouncedRender();
+                });
                 this.elements.searchInput.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
                         this.debouncedSearch();
@@ -1628,25 +1630,25 @@
             renderChannels() {
                 if (this.state.isLoading) return;
                 
-                if (!this.state.searchIndex) {
-                    this.prepareFilterIndexes();
-                }
-                
-                const fragment = document.createDocumentFragment();
                 const filteredChannels = this.filterChannels();
+                this.elements.channelsGrid.innerHTML = '';
                 
                 if (filteredChannels.length === 0) {
                     this.elements.channelsGrid.innerHTML = '<p class="no-results">No se encontraron canales. Prueba con otros filtros.</p>';
                     return;
                 }
                 
+                const fragment = document.createDocumentFragment();
+                
                 if (this.state.isGrouped) {
                     this.renderGroupedChannels(filteredChannels, fragment);
                 } else {
-                    this.renderUngroupedChannels(filteredChannels, fragment);
+                    filteredChannels.forEach(channel => {
+                        const channelCard = DOMFactory.createChannelCard(channel);
+                        fragment.appendChild(channelCard);
+                    });
                 }
                 
-                this.elements.channelsGrid.innerHTML = '';
                 this.elements.channelsGrid.appendChild(fragment);
             }
 
@@ -1701,25 +1703,19 @@
                 });
             }
 
-            renderUngroupedChannels(channels, fragment) {
-                channels.forEach(channel => {
-                    const channelCard = DOMFactory.createChannelCard(channel, false);
-                    fragment.appendChild(channelCard);
-                });
-            }
-
             filterChannels() {
+                const searchTerm = this.elements.searchInput.value.trim().toLowerCase();
                 let filtered;
                 
                 switch (this.state.currentFilter) {
                     case 'live':
-                        filtered = FilterStrategy.live(this.state.channels, this.elements.searchInput.value.toLowerCase());
+                        filtered = FilterStrategy.live(this.state.channels, searchTerm);
                         break;
                     case 'favorites':
-                        filtered = FilterStrategy.favorites(this.state.favorites, this.state.channels, this.elements.searchInput.value.toLowerCase());
+                        filtered = FilterStrategy.favorites(this.state.favorites, this.state.channels, searchTerm);
                         break;
                     default:
-                        filtered = FilterStrategy.all(this.state.channels, this.elements.searchInput.value.toLowerCase());
+                        filtered = FilterStrategy.all(this.state.channels, searchTerm);
                 }
                 
                 if (this.state.isGrouped) {
