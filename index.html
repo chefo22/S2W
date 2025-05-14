@@ -854,24 +854,35 @@
                 let domainExtracted = false;
                 let validLinkChannels = 0;
 
-                // Buscar todos los párrafos que contienen información de canales
-                const paragraphs = doc.querySelectorAll('p');
+                // Buscar todos los elementos que puedan contener información de canales
+                const elements = doc.querySelectorAll('p, div');
                 
-                paragraphs.forEach(p => {
-                    const lines = p.innerHTML.split('<br />');
+                elements.forEach(element => {
+                    const html = element.innerHTML;
+                    // Dividir por <br> para manejar líneas múltiples
+                    const lines = html.split(/<br\s*\/?>/i);
                     
                     lines.forEach(line => {
                         if (!line.trim()) return;
                         
-                        // Extraer hora y evento (compartidos por todos los canales de esta línea)
-                        const timeMatch = line.match(/(\d{2}:\d{2})/);
+                        // Extraer hora (formato HH:MM)
+                        const timeMatch = line.match(/(\d{1,2}:\d{2})\s*–/); // Busca "HH:MM –"
                         const time = timeMatch ? timeMatch[1] : 'LIVE';
                         
-                        // Extraer el texto del evento (todo antes del primer enlace)
-                        const eventText = line.split('<a')[0].replace(time, '').trim();
+                        // Extraer el texto del evento (todo después de la hora hasta el primer enlace)
+                        let eventText = '';
+                        if (timeMatch) {
+                            const eventStart = timeMatch.index + timeMatch[0].length;
+                            const eventEnd = line.indexOf('<a', eventStart);
+                            eventText = line.substring(eventStart, eventEnd !== -1 ? eventEnd : undefined)
+                                             .replace(/–/g, '').trim();
+                        } else {
+                            // Si no hay hora, tomar todo el texto antes del primer enlace como evento
+                            eventText = line.split('<a')[0].trim();
+                        }
                         
                         // Extraer todos los enlaces <a> de la línea
-                        const linkMatches = [...line.matchAll(/<a href="([^"]+)"[^>]*>([^<]+)<\/a>/gi)];
+                        const linkMatches = [...line.matchAll(/<a\s+href="([^"]+)"[^>]*>([^<]+)<\/a>/gi)];
                         
                         if (!linkMatches || linkMatches.length === 0) return;
                         
@@ -880,8 +891,10 @@
                             const url = linkMatch[1];
                             const linkText = linkMatch[2];
                             
-                            // Extraer nombre del canal y número
-                            const channelMatch = linkText.match(/(.+?)\s*\(CH-(\d+)\)/i);
+                            // Extraer nombre del canal y número (con diferentes patrones posibles)
+                            const channelMatch = linkText.match(/(.+?)\s*\(CH-(\d+)\)/i) || 
+                                                linkText.match(/(Home Feed|Away Feed)\s*\(CH-(\d+)\)/i);
+                            
                             if (!channelMatch) return;
                             
                             const channelName = channelMatch[1].trim();
