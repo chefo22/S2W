@@ -854,116 +854,76 @@
                 let domainExtracted = false;
                 let validLinkChannels = 0;
 
-                // Buscar todos los elementos que puedan contener información de canales
-                const elements = doc.querySelectorAll('p, div');
+                const sections = doc.querySelectorAll('h2, p');
+                let currentCategory = '';
                 
-                elements.forEach(element => {
-                    const html = element.innerHTML;
-                    // Dividir por <br> para manejar líneas múltiples
-                    const lines = html.split(/<br\s*\/?>/i);
-                    
-                    lines.forEach(line => {
-                        if (!line.trim()) return;
+                sections.forEach(section => {
+                    if (section.tagName === 'H2') {
+                        currentCategory = section.textContent.trim();
+                    } else if (section.tagName === 'P' && section.innerHTML.includes('CH-')) {
+                        const strongElements = section.querySelectorAll('strong');
                         
-                        // Extraer hora (formato HH:MM)
-                        const timeMatch = line.match(/(\d{1,2}:\d{2})\s*–/); // Busca "HH:MM –"
-                        const time = timeMatch ? timeMatch[1] : 'LIVE';
-                        
-                        // Extraer el texto del evento (todo después de la hora hasta el primer enlace)
-                        let eventText = '';
-                        if (timeMatch) {
-                            const eventStart = timeMatch.index + timeMatch[0].length;
-                            const eventEnd = line.indexOf('<a', eventStart);
-                            eventText = line.substring(eventStart, eventEnd !== -1 ? eventEnd : undefined)
-                                             .replace(/–/g, '').trim();
-                        } else {
-                            // Si no hay hora, tomar todo el texto antes del primer enlace como evento
-                            eventText = line.split('<a')[0].trim();
-                        }
-                        
-                        // Extraer todos los enlaces <a> de la línea
-                        const linkMatches = [...line.matchAll(/<a\s+href="([^"]+)"[^>]*>([^<]+)<\/a>/gi)];
-                        
-                        if (!linkMatches || linkMatches.length === 0) return;
-                        
-                        // Procesar cada enlace encontrado
-                        linkMatches.forEach(linkMatch => {
-                            const url = linkMatch[1];
-                            const linkText = linkMatch[2];
+                        strongElements.forEach(strong => {
+                            const text = strong.textContent.trim();
+                            const timeMatch = text.match(/^(\d{1,2}:\d{2})/);
+                            const time = timeMatch ? timeMatch[1] : 'LIVE';
                             
-                            // Extraer nombre del canal y número (con diferentes patrones posibles)
-                            const channelMatch = linkText.match(/(.+?)\s*\(CH-(\d+)\)/i) || 
-                                                linkText.match(/(Home Feed|Away Feed)\s*\(CH-(\d+)\)/i);
+                            let eventText = '';
+                            if (timeMatch) {
+                                const eventStart = timeMatch[0].length;
+                                const eventEnd = text.indexOf(' ', eventStart);
+                                eventText = text.substring(eventStart, eventEnd !== -1 ? eventEnd : undefined).trim();
+                            } else {
+                                const linkIndex = text.indexOf('<a');
+                                eventText = linkIndex !== -1 ? text.substring(0, linkIndex).trim() : '';
+                            }
                             
-                            if (!channelMatch) return;
+                            const links = strong.querySelectorAll('a');
                             
-                            const channelName = channelMatch[1].trim();
-                            const channelNumber = channelMatch[2];
-                            
-                            const channelKey = `${channelNumber}|${channelName}|${time}|${eventText}`;
-                            
-                            if (!uniqueChannels.has(channelKey)) {
-                                uniqueChannels.add(channelKey);
+                            links.forEach(link => {
+                                const url = link.getAttribute('href');
+                                const linkText = link.textContent.trim();
                                 
-                                if (!domainExtracted && url) {
-                                    const domainMatch = url.match(/https?:\/\/(daddylivehd[^\/]+)/i);
-                                    if (domainMatch && domainMatch[1]) {
-                                        state.baseDomain = domainMatch[1];
-                                        localStorage.setItem('baseDomain', state.baseDomain);
-                                        domainExtracted = true;
+                                const channelMatch = linkText.match(/(.+?)\s*\(CH-(\d+)\)/i);
+                                
+                                if (channelMatch) {
+                                    const channelName = channelMatch[1].trim();
+                                    const channelNumber = channelMatch[2];
+                                    
+                                    const channelKey = `${channelNumber}|${channelName}|${time}|${eventText}`;
+                                    
+                                    if (!uniqueChannels.has(channelKey)) {
+                                        uniqueChannels.add(channelKey);
+                                        
+                                        if (!domainExtracted && url) {
+                                            const domainMatch = url.match(/https?:\/\/(daddylivehd[^\/]+)/i);
+                                            if (domainMatch && domainMatch[1]) {
+                                                state.baseDomain = domainMatch[1];
+                                                localStorage.setItem('baseDomain', state.baseDomain);
+                                                domainExtracted = true;
+                                            }
+                                        }
+                                        
+                                        channels.push({
+                                            name: channelName,
+                                            number: channelNumber,
+                                            time: time,
+                                            event: eventText,
+                                            url: url,
+                                            rawText: linkText,
+                                            isFavorite: state.favorites.some(fav => fav.number === channelNumber),
+                                            isSecondary: false,
+                                            category: currentCategory
+                                        });
+                                        
+                                        state.knownChannels[channelNumber] = channelName;
+                                        validLinkChannels++;
                                     }
                                 }
-                                
-                                channels.push({
-                                    name: channelName,
-                                    number: channelNumber,
-                                    time: time,
-                                    event: eventText,
-                                    url: url,
-                                    rawText: linkText,
-                                    isFavorite: state.favorites.some(fav => fav.number === channelNumber),
-                                    isSecondary: false
-                                });
-                                
-                                state.knownChannels[channelNumber] = channelName;
-                                validLinkChannels++;
-                            }
+                            });
                         });
-                    });
-                });
-
-                // Procesar también los encabezados de categoría (como "Soccer")
-                const headers = doc.querySelectorAll('h2');
-                headers.forEach(header => {
-                    const category = header.textContent.trim();
-                    if (category) {
-                        // Podemos usar esta información para agrupar los canales si lo deseamos
                     }
                 });
-
-                // Procesar canales secundarios como antes
-                const textNodes = [];
-                const walker = document.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT, null, false);
-                let node;
-                while (node = walker.nextNode()) {
-                    if (node.nodeValue.trim().match(/CH-\d+/i)) {
-                        textNodes.push(node.nodeValue.trim());
-                    }
-                }
-
-                textNodes.forEach(text => {
-                    const channelMatch = text.match(/(.+?)\s*\(CH-(\d+)\)/i);
-                    if (channelMatch) {
-                        const channelName = channelMatch[1].trim();
-                        const channelNumber = channelMatch[2];
-                        
-                        if (!state.knownChannels[channelNumber]) {
-                            state.knownChannels[channelNumber] = channelName;
-                        }
-                    }
-                });
-
-                localStorage.setItem('daddyliveKnownChannels', JSON.stringify(state.knownChannels));
 
                 if (validLinkChannels < state.minValidChannels) {
                     state.backupMode = true;
@@ -977,7 +937,8 @@
                                 url: `https://${state.baseDomain}/embed/stream-${number}.php`,
                                 rawText: `${name} (CH-${number})`,
                                 isFavorite: state.favorites.some(fav => fav.number === number),
-                                isSecondary: true
+                                isSecondary: true,
+                                category: ''
                             });
                         }
                     }
