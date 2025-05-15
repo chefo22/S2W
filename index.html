@@ -853,14 +853,14 @@
                 const uniqueChannels = new Set();
                 let domainExtracted = false;
                 let validLinkChannels = 0;
+                let currentCategory = '';
 
                 const sections = doc.querySelectorAll('h2, p');
-                let currentCategory = '';
                 
                 sections.forEach(section => {
                     if (section.tagName === 'H2') {
                         currentCategory = section.textContent.trim();
-                    } else if (section.tagName === 'P' && section.innerHTML.includes('CH-')) {
+                    } else if (section.tagName === 'P') {
                         const strongElements = section.querySelectorAll('strong');
                         
                         strongElements.forEach(strong => {
@@ -871,7 +871,7 @@
                             let eventText = '';
                             if (timeMatch) {
                                 const eventStart = timeMatch[0].length;
-                                const eventEnd = text.indexOf(' ', eventStart);
+                                const eventEnd = text.indexOf('<a', eventStart);
                                 eventText = text.substring(eventStart, eventEnd !== -1 ? eventEnd : undefined).trim();
                             } else {
                                 const linkIndex = text.indexOf('<a');
