@@ -864,18 +864,22 @@
                         const strongElements = section.querySelectorAll('strong');
                         
                         strongElements.forEach(strong => {
-                            const text = strong.textContent.trim();
+                            const textNodes = [];
+                            strong.childNodes.forEach(node => {
+                                if (node.nodeType === Node.TEXT_NODE) {
+                                    textNodes.push(node.textContent);
+                                }
+                            });
+                            const text = textNodes.join('').trim();
                             const timeMatch = text.match(/^(\d{1,2}:\d{2})/);
                             const time = timeMatch ? timeMatch[1] : 'LIVE';
                             
                             let eventText = '';
                             if (timeMatch) {
                                 const eventStart = timeMatch[0].length;
-                                const eventEnd = text.indexOf('<a', eventStart);
-                                eventText = text.substring(eventStart, eventEnd !== -1 ? eventEnd : undefined).trim();
+                                eventText = text.substring(eventStart).trim();
                             } else {
-                                const linkIndex = text.indexOf('<a');
-                                eventText = linkIndex !== -1 ? text.substring(0, linkIndex).trim() : '';
+                                eventText = text.trim();
                             }
                             
                             const links = strong.querySelectorAll('a');
