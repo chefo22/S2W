@@ -864,7 +864,7 @@
         class EnhancedStore extends Observable {
             setState(newState) {
                 const toPersist = {};
-                ['favorites', 'isDarkMode', 'currentFilter', 'stickyPlayer', 'usePremium', 'isGrouped', 'baseDomain'].forEach(key => {
+                ['favorites', 'isDarkMode', 'currentFilter', 'stickyPlayer', 'usePremium', 'isGrouped', 'baseDomain', 'hiddenChannels'].forEach(key => {
                     if (newState[key] !== undefined) {
                         toPersist[key] = newState[key];
                         localStorage.setItem(`tvApp_${key}`, JSON.stringify(newState[key]));
@@ -1072,6 +1072,7 @@
                 this.state = {
                     channels: [],
                     favorites: JSON.parse(localStorage.getItem('daddyliveFavorites')) || [],
+                    hiddenChannels: JSON.parse(localStorage.getItem('hiddenChannels')) || [],
                     currentStream: null,
                     isDarkMode: localStorage.getItem('darkMode') === 'true',
                     currentFilter: localStorage.getItem('currentFilter') || 'all',
@@ -1168,7 +1169,14 @@
             setupEventDelegation() {
                 document.body.addEventListener('click', (e) => {
                     if (e.target.closest('.channel-card')) {
-                        const channelId = e.target.closest('.channel-card').dataset.id;
+                        const channelCard = e.target.closest('.channel-card');
+                        const channelId = channelCard.dataset.id;
+                        
+                        // Solo manejar triple clic en el filtro "Todos"
+                        if (this.state.currentFilter === 'all') {
+                            this.handleTripleClick(channelId);
+                        }
+                        
                         const channel = this.state.channels.find(c => c.number === channelId);
                         if (channel) this.playChannel(channel);
                     }
@@ -1239,6 +1247,30 @@
                 });
 
                 window.addEventListener('scroll', this.debounce(() => {}, 100));
+            }
+
+            handleTripleClick(channelId) {
+                this.state.clickCount++;
+                
+                if (this.state.tripleClickTimer) {
+                    clearTimeout(this.state.tripleClickTimer);
+                }
+                
+                this.state.tripleClickTimer = setTimeout(() => {
+                    this.state.clickCount = 0;
+                }, 500);
+                
+                if (this.state.clickCount === 3) {
+                    this.state.clickCount = 0;
+                    if (confirm('¿Estás seguro de que quieres ocultar este canal?')) {
+                        if (!this.state.hiddenChannels.includes(channelId)) {
+                            this.state.hiddenChannels.push(channelId);
+                            localStorage.setItem('hiddenChannels', JSON.stringify(this.state.hiddenChannels));
+                            this.renderChannels();
+                            this.showNotification('Canal ocultado');
+                        }
+                    }
+                }
             }
 
             initializeServiceWorker() {
@@ -1707,15 +1739,20 @@
                 const searchTerm = this.elements.searchInput.value.trim().toLowerCase();
                 let filtered;
                 
+                // Filtrar primero los canales ocultos
+                const visibleChannels = this.state.channels.filter(channel => 
+                    !this.state.hiddenChannels.includes(channel.number)
+                );
+                
                 switch (this.state.currentFilter) {
                     case 'live':
-                        filtered = FilterStrategy.live(this.state.channels, searchTerm);
+                        filtered = FilterStrategy.live(visibleChannels, searchTerm);
                         break;
                     case 'favorites':
-                        filtered = FilterStrategy.favorites(this.state.favorites, this.state.channels, searchTerm);
+                        filtered = FilterStrategy.favorites(this.state.favorites, visibleChannels, searchTerm);
                         break;
                     default:
-                        filtered = FilterStrategy.all(this.state.channels, searchTerm);
+                        filtered = FilterStrategy.all(visibleChannels, searchTerm);
                 }
                 
                 if (this.state.isGrouped) {
@@ -2035,6 +2072,19 @@
                     return;
                 } else if (value === '&P') {
                     this.togglePremiumMode();
+                    this.elements.searchInput.value = '';
+                    return;
+                } else if (value === '&H') {
+                    if (this.state.hiddenChannels.length > 0) {
+                        if (confirm(`¿Quieres restaurar los ${this.state.hiddenChannels.length} canales ocultos?`)) {
+                            this.state.hiddenChannels = [];
+                            localStorage.setItem('hiddenChannels', JSON.stringify(this.state.hiddenChannels));
+                            this.renderChannels();
+                            this.showNotification('Canales ocultos restaurados');
+                        }
+                    } else {
+                        this.showNotification('No hay canales ocultos');
+                    }
                     this.elements.searchInput.value = '';
                     return;
                 }
