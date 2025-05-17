@@ -882,11 +882,13 @@
                 card.dataset.id = channel.number;
                 card.dataset.key = channel.number;
 
+                const favoriteIndicator = channel.isFavorite ? '<span style="color: gold; margin-right: 5px;">★</span>' : '';
+
                 if (isGrouped) {
                     card.innerHTML = `
                         <div class="channel-header">
                             <div class="channel-time ${channel.time ? 'channel-time--live' : ''}"></div>
-                            <h3 class="channel-name">${channel.name}</h3>
+                            <h3 class="channel-name">${favoriteIndicator}${channel.name}</h3>
                             <div class="channel-number">${channel.number}</div>
                         </div>
                     `;
@@ -896,7 +898,7 @@
                             <div class="channel-time ${channel.time ? 'channel-time--live' : ''}">
                                 ${channel.time || 'LIVE'}
                             </div>
-                            <h3 class="channel-name">${channel.name}</h3>
+                            <h3 class="channel-name">${favoriteIndicator}${channel.name}</h3>
                             <div class="channel-number">${channel.number}</div>
                         </div>
                         <p class="channel-event">${channel.event}</p>
@@ -1021,9 +1023,13 @@
 
             static favorites = memoize((favorites, allChannels, searchTerm = '') => {
                 let filtered = favorites.map(fav => {
-                    const channel = allChannels.find(c => c.number === fav.number);
-                    if (channel) return channel;
-                    return {
+                    const matchingChannels = allChannels.filter(c => c.number === fav.number);
+                    
+                    if (matchingChannels.length > 0) {
+                        return matchingChannels;
+                    }
+                    
+                    return [{
                         name: fav.name,
                         number: fav.number,
                         time: '',
@@ -1033,8 +1039,8 @@
                         rawText: fav.name,
                         isFavorite: true,
                         isSecondary: false
-                    };
-                }).filter(Boolean);
+                    }];
+                }).flat().filter(Boolean);
 
                 return FilterStrategy.all(filtered, searchTerm);
             });
@@ -1100,7 +1106,6 @@
                     baseDomain: localStorage.getItem('baseDomain') || 'daddylivehd1.my',
                     tripleClickTimer: null,
                     clickCount: 0,
-                    knownChannels: JSON.parse(localStorage.getItem('qKnownChannels')) || {},
                     minValidChannels: 50,
                     backupMode: false,
                     searchIndex: null
@@ -1173,7 +1178,6 @@
                         const channelCard = e.target.closest('.channel-card');
                         const channelId = channelCard.dataset.id;
                         
-                        // Solo manejar triple clic en el filtro "Todos"
                         if (this.state.currentFilter === 'all') {
                             this.handleTripleClick(channelId);
                         }
@@ -1336,7 +1340,6 @@
                     let validLinkChannels = 0;
                     let currentSport = 'General';
 
-                    // Cargar canales automáticos guardados
                     const autoChannels = JSON.parse(localStorage.getItem('autoChannels')) || {};
                     
                     const sportTranslations = {
@@ -1413,7 +1416,7 @@
                                         }
                                     }
                                     
-                                    // Actualizar o añadir canal a autoChannels
+                                    // Actualizar autoChannels si el nombre es diferente o no existe
                                     if (!autoChannels[channelNumber] || autoChannels[channelNumber].name !== channelName) {
                                         autoChannels[channelNumber] = {
                                             name: channelName,
@@ -1434,7 +1437,6 @@
                                         isSecondary: false
                                     });
                                     
-                                    this.state.knownChannels[channelNumber] = channelName;
                                     validLinkChannels++;
                                 }
                             }
@@ -1460,24 +1462,8 @@
 
                     if (validLinkChannels < this.state.minValidChannels) {
                         this.state.backupMode = true;
-                        for (const [number, name] of Object.entries(this.state.knownChannels)) {
-                            if (!channels.some(c => c.number === number)) {
-                                channels.push({
-                                    name: name,
-                                    number: number,
-                                    time: '',
-                                    event: '',
-                                    sport: 'General',
-                                    url: `https://${this.state.baseDomain}/embed/stream-${number}.php`,
-                                    rawText: `${name} (CH-${number})`,
-                                    isFavorite: this.state.favorites.some(fav => fav.number === number),
-                                    isSecondary: true
-                                });
-                            }
-                        }
                     }
 
-                    localStorage.setItem('daddyliveKnownChannels', JSON.stringify(this.state.knownChannels));
                     return channels;
                 } catch (error) {
                     console.error('Error al extraer canales:', error);
@@ -1791,7 +1777,6 @@
                 const searchTerm = this.elements.searchInput.value.trim().toLowerCase();
                 let filtered;
                 
-                // Filtrar primero los canales ocultos
                 const visibleChannels = this.state.channels.filter(channel => 
                     !this.state.hiddenChannels.includes(channel.number)
                 );
