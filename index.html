@@ -864,7 +864,7 @@
         class EnhancedStore extends Observable {
             setState(newState) {
                 const toPersist = {};
-                ['favorites', 'isDarkMode', 'currentFilter', 'stickyPlayer', 'usePremium', 'isGrouped', 'baseDomain', 'hiddenChannels'].forEach(key => {
+                ['favorites', 'isDarkMode', 'currentFilter', 'stickyPlayer', 'usePremium', 'isGrouped', 'baseDomain', 'hiddenChannels', 'autoChannels'].forEach(key => {
                     if (newState[key] !== undefined) {
                         toPersist[key] = newState[key];
                         localStorage.setItem(`tvApp_${key}`, JSON.stringify(newState[key]));
@@ -1073,6 +1073,7 @@
                     channels: [],
                     favorites: JSON.parse(localStorage.getItem('daddyliveFavorites')) || [],
                     hiddenChannels: JSON.parse(localStorage.getItem('hiddenChannels')) || [],
+                    autoChannels: JSON.parse(localStorage.getItem('autoChannels')) || {},
                     currentStream: null,
                     isDarkMode: localStorage.getItem('darkMode') === 'true',
                     currentFilter: localStorage.getItem('currentFilter') || 'all',
@@ -1335,6 +1336,9 @@
                     let validLinkChannels = 0;
                     let currentSport = 'General';
 
+                    // Cargar canales automáticos guardados
+                    const autoChannels = JSON.parse(localStorage.getItem('autoChannels')) || {};
+                    
                     const sportTranslations = {
                         'Football': 'Fútbol',
                         'Soccer': 'Fútbol',
@@ -1409,6 +1413,15 @@
                                         }
                                     }
                                     
+                                    // Actualizar o añadir canal a autoChannels
+                                    if (!autoChannels[channelNumber] || autoChannels[channelNumber].name !== channelName) {
+                                        autoChannels[channelNumber] = {
+                                            name: channelName,
+                                            url: `https://${this.state.baseDomain}/embed/stream-${channelNumber}.php`
+                                        };
+                                        localStorage.setItem('autoChannels', JSON.stringify(autoChannels));
+                                    }
+                                    
                                     channels.push({
                                         name: channelName,
                                         number: channelNumber,
@@ -1428,6 +1441,23 @@
                         });
                     });
 
+                    // Añadir canales automáticos que no aparecieron en esta actualización
+                    Object.entries(autoChannels).forEach(([number, channelData]) => {
+                        if (!channels.some(c => c.number === number)) {
+                            channels.push({
+                                name: channelData.name,
+                                number: number,
+                                time: '',
+                                event: '',
+                                sport: 'General',
+                                url: channelData.url,
+                                rawText: `${channelData.name} (CH-${number})`,
+                                isFavorite: this.state.favorites.some(fav => fav.number === number),
+                                isSecondary: true
+                            });
+                        }
+                    });
+
                     if (validLinkChannels < this.state.minValidChannels) {
                         this.state.backupMode = true;
                         for (const [number, name] of Object.entries(this.state.knownChannels)) {
@@ -1441,7 +1471,7 @@
                                     url: `https://${this.state.baseDomain}/embed/stream-${number}.php`,
                                     rawText: `${name} (CH-${number})`,
                                     isFavorite: this.state.favorites.some(fav => fav.number === number),
-                                    isSecondary: false
+                                    isSecondary: true
                                 });
                             }
                         }
@@ -1479,8 +1509,30 @@
                     this.updateChannelCount();
                     this.showNotification('Mostrando copia de seguridad. Actualizando...', 3000);
                 } else {
-                    this.updateSystemStatus('loading');
-                    this.elements.channelsGrid.innerHTML = '<p class="no-results">Cargando canales por primera vez...</p>';
+                    // Si no hay copia de seguridad, cargar desde autoChannels
+                    const autoChannels = JSON.parse(localStorage.getItem('autoChannels')) || {};
+                    const autoChannelsList = Object.entries(autoChannels).map(([number, channelData]) => ({
+                        name: channelData.name,
+                        number: number,
+                        time: '',
+                        event: '',
+                        sport: 'General',
+                        url: channelData.url,
+                        rawText: `${channelData.name} (CH-${number})`,
+                        isFavorite: this.state.favorites.some(fav => fav.number === number),
+                        isSecondary: true
+                    }));
+
+                    if (autoChannelsList.length > 0) {
+                        this.state.channels = autoChannelsList;
+                        this.renderChannels();
+                        this.updateSystemStatus('unstable');
+                        this.updateChannelCount();
+                        this.showNotification('Mostrando canales guardados', 3000);
+                    } else {
+                        this.updateSystemStatus('loading');
+                        this.elements.channelsGrid.innerHTML = '<p class="no-results">Cargando canales por primera vez...</p>';
+                    }
                 }
             }
 
